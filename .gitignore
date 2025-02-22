@@ -1,0 +1,5 @@
+/pse-bpc/target/
+*.class
+*.log
+*.idea/
+*.DS_Store

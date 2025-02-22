@@ -11,6 +11,6 @@ package com.mycompany.bpc;
 public class PseBpc {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        System.out.println("Welcome to BPC!");
     }
 }
