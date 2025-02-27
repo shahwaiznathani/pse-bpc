@@ -1,51 +1,56 @@
 package com.mycompany.bpc.models;
 
-import java.time.LocalDateTime;
+import java.time.*;
 
 /**
  *
  * @author shahwaizshaban
  */
 public class Appointment {
-    private LocalDateTime dateTime;
-    private Physiotherapist physiotherapist;
-    private Patient patient;
+    private LocalDate appointmentDate;
+    private LocalTime appointmentTime;
+    private LocalDateTime bookingDate;
+    private String physiotherapistId;
+    private String patientId;
+    private String treatment;
     private String status;
 
     // Constructor, Getters, Setters
-    public Appointment(LocalDateTime dateTime, Physiotherapist physiotherapist, Patient patient, String status) {
-        this.dateTime = dateTime;
-        this.physiotherapist = physiotherapist;
-        this.patient = patient;
+    public Appointment(LocalDate appointmentDate, LocalTime appointmentTime, LocalDateTime bookingDate, String physiotherapistId, String patientId, String treatment, String status) {
+        this.appointmentDate = appointmentDate;
+        this.appointmentTime = appointmentTime;
+        this.bookingDate = bookingDate;
+        this.physiotherapistId = physiotherapistId;
+        this.patientId = patientId;
+        this.treatment = treatment;
         this.status = status;
     }
 
-    public void book() {
-        // Implement booking logic
+    public LocalTime getAppointmentTime() {
+        return appointmentTime;
     }
 
-    public void cancel() {
-        // Implement cancel logic
+    public LocalDate getAppointmentDate() {
+        return appointmentDate;
     }
 
-    public void attend() {
-        // Implement attend logic
+    public LocalDateTime getBookingDate() {
+        return bookingDate;
     }
 
-    public void reschedule(LocalDateTime newDateTime) {
-        this.dateTime = newDateTime;
+    public String getPhysiotherapistId() {
+        return physiotherapistId;
     }
 
-    // Getters and Setters
-    public LocalDateTime getDateTime() { return dateTime; }
-    public void setDateTime(LocalDateTime dateTime) { this.dateTime = dateTime; }
+    public String getPatientId() {
+        return patientId;
+    }
 
-    public Physiotherapist getPhysiotherapist() { return physiotherapist; }
-    public void setPhysiotherapist(Physiotherapist physiotherapist) { this.physiotherapist = physiotherapist; }
+    public String getTreatment() {
+        return treatment;
+    }
 
-    public Patient getPatient() { return patient; }
-    public void setPatient(Patient patient) { this.patient = patient; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getStatus() {
+        return status;
+    }
 }

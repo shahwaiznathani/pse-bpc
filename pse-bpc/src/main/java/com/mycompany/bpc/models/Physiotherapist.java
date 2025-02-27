@@ -7,31 +7,25 @@ import java.util.List;
  * @author shahwaizshaban
  */
 public class Physiotherapist extends Member{
-    private List<String> expertise;
-    private List<Treatment> treatmentsOffered;
+    private List<Expertise> expertise;
 
-    public Physiotherapist(String id, String fullName, String address, String phoneNumber, List<String> expertise) {
-        super(id, fullName, address, phoneNumber);
+    public Physiotherapist(String id, String fullName, String address, String phoneNumber, String passwrod, List<Expertise> expertise) {
+        super(id, fullName, address, phoneNumber, passwrod);
         this.expertise = expertise;
     }
 
-    // Methods for managing treatments and timetable
-    public void addTreatment(Treatment treatment) {
-        treatmentsOffered.add(treatment);
+    public void addTreatment(String treatment, String expertiseName) {
+        for (Expertise exp : expertise) {
+            if (exp.getName().equalsIgnoreCase(expertiseName)) {
+                exp.addTreatment(treatment);
+                return;
+            }
+        }
+        System.out.println("Expertise not found: " + expertiseName);
     }
 
-    public void removeTreatment(Treatment treatment) {
-        treatmentsOffered.remove(treatment);
+    public List<Expertise> getAllExpertise() {
+        return expertise;
     }
 
-    public void viewTimetable() {
-        // Implement timetable logic
-    }
-
-    // Getters and Setters for expertise and treatmentsOffered
-    public List<String> getExpertise() { return expertise; }
-    public void setExpertise(List<String> expertise) { this.expertise = expertise; }
-
-    public List<Treatment> getTreatmentsOffered() { return treatmentsOffered; }
-    public void setTreatmentsOffered(List<Treatment> treatmentsOffered) { this.treatmentsOffered = treatmentsOffered; }
 }

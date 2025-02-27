@@ -1,24 +1,13 @@
 package com.mycompany.bpc.models;
 
+import com.mycompany.bpc.models.*;
+import java.util.*;
 /**
  *
  * @author shahwaizshaban
  */
 public class Patient extends Member{
-    public Patient(String id, String fullName, String address, String phoneNumber) {
-        super(id, fullName, address, phoneNumber);
-    }
-
-    // Methods for booking, canceling, and viewing appointments
-    public void bookAppointment() {
-        // Implement booking logic
-    }
-
-    public void cancelAppointment() {
-        // Implement cancel logic
-    }
-
-    public void viewAppointments() {
-        // Implement view appointments logic
+    public Patient(String id, String fullName, String address, String phoneNumber, String password) {
+        super(id, fullName, address, phoneNumber, password);
     }
 }
