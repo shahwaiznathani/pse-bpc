@@ -3,83 +3,77 @@ package com.mycompany.bpc;
 import com.mycompany.bpc.helper.DataHelper;
 import com.mycompany.bpc.models.*;
 
-
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 /**
  *
  * @author shahwaizshaban
  */
 public class PseBpc {
     public static BookingSystem bpc = new BookingSystem();
+    public static Scanner scanner = new Scanner(System.in);
+
     public static void main(String[] args) {
         initializeData();
         login();
     }
 
     private static void initializeData() {
-
-        // Load Data from Files
         List<Patient> patientsData = DataHelper.loadPatients();
         List<Physiotherapist> physiotherapists = DataHelper.loadPhysiotherapists();
+        List<Appointment> appointments = DataHelper.loadAppointments();
 
         bpc.bulkAddPatients(patientsData);
         bpc.bulkAddPysiotherapists(physiotherapists);
-
-
+        bpc.bulkAddAppointments(appointments);
     }
 
     private static void login() {
-        System.out.println("\n🌟 Welcome to Boost Physio Clinic 🌟\n");
-
-        Scanner scanner = new Scanner(System.in);
-
+        System.out.println("\n **Welcome to Boost Physio Clinic** \n");
         System.out.println("\n===============================");
-        System.out.println("🔐 Login to Boost Physio Clinic");
+        System.out.println("Login to Boost Physio Clinic");
         System.out.println("===============================");
-        System.out.print("🔹 Enter your User ID: ");
+        System.out.print("Enter your User ID: ");
 
         String userId = scanner.nextLine();
 
-        System.out.print("🔹 Enter Password: ");
+        System.out.print("Enter Password: ");
 
         String password = scanner.nextLine();
 
-        Optional<Patient> patient = bpc.getAllPatients().stream().filter(p -> p.getId().equals(userId) && p.getPasswrod().equals(password)).findFirst();
-        Optional<Physiotherapist> physio = bpc.getAllPhysiotherapists().stream().filter(p -> p.getId().equals(userId) && p.getPasswrod().equals(password)).findFirst();
+        Optional<Patient> patient = bpc.getAllPatients().stream().filter(p -> p.getId().equals(Long.valueOf(userId)) && p.getPassword().equals(password)).findFirst();
+        Optional<Physiotherapist> physio = bpc.getAllPhysiotherapists().stream().filter(p -> p.getId().equals(Long.valueOf(userId)) && p.getPassword().equals(password)).findFirst();
 
         if (patient.isPresent()) {
             Patient patientData = patient.get();
-            String patientId = patientData.getId();
-            System.out.println("✅ Login Successful! Welcome, " + patient.get().getFullName());
+            Long patientId = patientData.getId();
+            System.out.println("Login Successful! Welcome, " + patient.get().getFullName());
             showPatientMenu(patientId);
         }
         else if (physio.isPresent()) {
-            System.out.println("✅ Login Successful! Welcome, " + physio.get().getFullName());
+            System.out.println("Login Successful! Welcome, " + physio.get().getFullName());
             //showPhysiotherapistMenu(physio.get());
         }
         else {
-            System.out.println("❌ Invalid Credentials! Please try again.");
+            System.out.println("Invalid Credentials! Please try again.");
             login();
         }
     }
 
-    public static void showPatientMenu(String patientId) {
-        Scanner scanner = new Scanner(System.in);
+    private static void showPatientMenu(Long patientId) {
         System.out.println("\n===============================");
-        System.out.println("🏥 Patient Dashboard");
+        System.out.println("**Patient Dashboard**");
         System.out.println("===============================");
-        System.out.println("1️⃣ Book an Appointment");
-        System.out.println("2️⃣ View my Appointments");
-        System.out.println("3️⃣ Cancel an Appointment");
-        System.out.println("4️⃣ Logout");
+        System.out.println("1. Book an Appointment");
+        System.out.println("2. View my Appointments");
+        System.out.println("3. Cancel an Appointment");
+        System.out.println("4. Logout");
         System.out.println("===============================");
-        System.out.print("🔹 Enter your choice: ");
+        System.out.print("Enter your choice: ");
 
         int choice = scanner.nextInt();
-        scanner.nextLine();  // Consume newline
+        scanner.nextLine();
 
         switch (choice) {
             case 1:
@@ -89,28 +83,28 @@ public class PseBpc {
                 viewPatientAppointment(patientId);
                 break;
             case 3:
-                //cancelAppointment(scanner);
+                cancelPatientAppointment(patientId);
                 break;
             case 4:
-                System.out.println("\n👋 Thank you for using Boost Physio Clinic! Goodbye!");
+                System.out.println("\nThank you for using Boost Physio Clinic! Goodbye!");
                 scanner.close();
                 return;
             default:
-                System.out.println("❌ Invalid choice. Please try again.");
+                System.out.println("Invalid choice! Please try again.");
         }
     }
 
-    public static void bookingMenu(String patientId) {
-        Scanner scanner = new Scanner(System.in);
+    private static void bookingMenu(Long patientId) {
         System.out.println("\n===============================");
-        System.out.println("🏥 Appointment Booking");
+        System.out.println("**Appointment Booking**");
         System.out.println("===============================");
-        System.out.println("1️⃣ Search by Physiotherapist");
-        System.out.println("2️⃣ Search by Offered Treatments");
-        System.out.println("3️⃣ Return to Menu");
-        System.out.println("4️⃣ Logout");
+        System.out.println("1. Search by Physiotherapist");
+        System.out.println("2. Search by Offered Treatments");
+        System.out.println("3. Search by Area of Expertise");
+        System.out.println("4. Return to Menu");
+        System.out.println("5. Logout");
         System.out.println("===============================");
-        System.out.print("🔹 Enter your choice: ");
+        System.out.print("Enter your choice: ");
 
         int choice = scanner.nextInt();
         scanner.nextLine();  // Consume newline
@@ -120,38 +114,49 @@ public class PseBpc {
                 bookByPhysiotherapist(patientId);
                 break;
             case 2:
-                //viewAppointments();
+                bookByTreatmentOffered(patientId);
                 break;
             case 3:
-                showPatientMenu(patientId);
+                bookByAreaOfExpertise(patientId);
                 break;
             case 4:
-                System.out.println("\n👋 Thank you for using Boost Physio Clinic! Goodbye!");
+                showPatientMenu(patientId);
+                break;
+            case 5:
+                System.out.println("\nThank you for using Boost Physio Clinic! Goodbye!");
                 scanner.close();
                 return;
             default:
-                System.out.println("❌ Invalid choice. Please try again.");
+                System.out.println("Invalid choice! Please try again.");
         }
     }
 
-    public static void bookByPhysiotherapist(String patientId) {
-        List<Physiotherapist> lst = bpc.getAllPhysiotherapists();
+    private static void bookByPhysiotherapist(Long patientId) {
+        Physiotherapist selectedPhysio = new Physiotherapist();
+        while (true) {
+            System.out.print("Search Physiotherapist by name (e.g., Dr Shahwaiz): ");
+            String input = scanner.nextLine();
+            List<Physiotherapist> lst = bpc.searchPhysiotherapist(input);
 
-        // Step 1: Print physiotherapists
-        System.out.println("Select a Physiotherapist by entering the corresponding number:");
-        for (int i = 0; i < lst.size(); i++) {
-            System.out.println((i + 1) + ". " + lst.get(i).getFullName());  // Assuming getFullName() returns the name
+            if (lst.isEmpty()) {
+                System.out.println("No physiotherapist found. Please try again.");
+            }
+            else {
+                // Print physiotherapists
+                for (int i = 0; i < lst.size(); i++) {
+                    System.out.println((i + 1) + ". " + lst.get(i).getFullName());
+                }
+                // Get user selection
+                int choice = DataHelper.getValidNumberInput(scanner, 1, lst.size(), "Enter your choice (1-" + lst.size() + "): ");
+
+                // Get the selected physiotherapist
+                selectedPhysio = lst.get(choice - 1);
+                System.out.println("You selected: " + selectedPhysio.getFullName());
+                break; // Exit loop if physiotherapists are found
+            }
         }
 
-        // Step 2: Get user selection
-        Scanner scanner = new Scanner(System.in);
-        int choice = getValidNumberInput(scanner, 1, lst.size(), "Enter your choice (1-" + lst.size() + "): ");
-
-        // Get the selected physiotherapist
-        Physiotherapist selectedPhysio = lst.get(choice - 1);
-        System.out.println("You selected: " + selectedPhysio.getFullName());
-
-        // Step 3: Display expertise areas
+        // Display expertise areas
         List<Expertise> expertiseList = selectedPhysio.getAllExpertise();
         if (expertiseList.isEmpty()) {
             System.out.println("This physiotherapist has no expertise listed.");
@@ -163,12 +168,12 @@ public class PseBpc {
             System.out.println((i + 1) + ". " + expertiseList.get(i).getName());
         }
 
-        // Step 4: Let the user select an expertise
-        int expertiseChoice = getValidNumberInput(scanner, 1, expertiseList.size(), "Enter expertise number to see treatments: ");
+        // Let the user select an expertise
+        int expertiseChoice = DataHelper.getValidNumberInput(scanner, 1, expertiseList.size(), "Enter expertise number to see treatments: ");
         Expertise selectedExpertise = expertiseList.get(expertiseChoice - 1);
         System.out.println("You selected: " + selectedExpertise.getName());
 
-        // Step 5: Show treatments under the selected expertise
+        // Show treatments under the selected expertise
         List<String> treatments = selectedExpertise.getTreatments();
         if (treatments.isEmpty()) {
             System.out.println("No treatments available under this expertise.");
@@ -180,82 +185,233 @@ public class PseBpc {
             System.out.println((i + 1) + ". " + treatments.get(i));
         }
 
-        // Step 6: Let the user select a treatment
-        int treatmentChoice = getValidNumberInput(scanner, 1, treatments.size(), "Enter treatment number to book: ");
+        // Let the user select a treatment
+        int treatmentChoice = DataHelper.getValidNumberInput(scanner, 1, treatments.size(), "Enter treatment number to book: ");
         String selectedTreatment = treatments.get(treatmentChoice - 1);
 
-        // Step 7: Ask for appointment date
-        LocalDate appointmentDate = getValidDate(scanner, "Enter appointment date (YYYY-MM-DD): ");
+        // Ask for appointment date
+        Appointment selectedAppointment = new Appointment();
+        while (true){
+            LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter appointment date (YYYY-MM-DD): ");
 
-        // Step 8: Ask for appointment time
-        LocalTime appointmentTime = getValidTime(scanner, "Enter appointment time (HH:MM in 24-hour format): ");
+            List<Appointment> availAppointments = bpc.filterAppointmentByDate(appointmentDate, selectedPhysio.getId());
+            if (availAppointments.isEmpty()) {
+                System.out.println("No appointments available for " + selectedPhysio.getFullName() + " on " + appointmentDate.toString() + ". Try another Date.");
+            }
+            else{
+                System.out.println("\nAvailable Time Slots for " + selectedPhysio.getFullName() + " on " + appointmentDate.toString());
+                for (int i = 0; i < availAppointments.size(); i++) {
+                    String appointmentDuration = DataHelper.getDurationAsString(availAppointments.get(i).getAppointmentTime(), availAppointments.get(i).getAppointmentDuration());
+                    System.out.println((i + 1) + ". " + appointmentDuration);
+                }
 
-        Appointment newAppointment = new Appointment(appointmentDate, appointmentTime,
-               LocalDateTime.now(), selectedPhysio.getId(), patientId,selectedTreatment, "Scheduled");
+                // Let the user select a Slot
+                int slotChoice = DataHelper.getValidNumberInput(scanner, 1, availAppointments.size(), "Enter Slot number to book: ");
+                selectedAppointment = availAppointments.get(slotChoice - 1);
+                break;
+            }
+        }
 
-        bpc.bookAppointment(newAppointment);
+        bpc.updateAppointment(selectedAppointment, patientId, selectedTreatment);
 
         System.out.println("\nYou have successfully booked:");
         System.out.println("Physiotherapist: " + selectedPhysio.getFullName());
         System.out.println("Expertise: " + selectedExpertise.getName());
         System.out.println("Treatment: " + selectedTreatment);
-        System.out.println("Appointment Date: " + appointmentDate);
-        System.out.println("Appointment Time: " + appointmentTime);
+        System.out.println("Appointment Date: " + selectedAppointment.getAppointmentDate());
+        System.out.println("Appointment Time: " + selectedAppointment.getAppointmentTime());
 
         showPatientMenu(patientId);
     }
 
+    private static void bookByTreatmentOffered(Long patientId) {
+        List<Physiotherapist> physios = bpc.getAllPhysiotherapists();
+        Map<String, Set<Physiotherapist>> treatmentToPhysios = new HashMap<>();
 
-    private static int getValidNumberInput(Scanner scanner, int min, int max, String prompt) {
-        int choice = -1;
-        while (choice < min || choice > max) {
-            System.out.print(prompt);
-            try {
-                choice = Integer.parseInt(scanner.nextLine());
-                if (choice < min || choice > max) {
-                    System.out.println("Invalid choice. Please select a valid number.");
+        // Gather all unique treatments and map them to physiotherapists
+        for (Physiotherapist physio : physios) {
+            for (Expertise expertise : physio.getAllExpertise()) {
+                for (String treatment : expertise.getTreatments()) {
+                    treatmentToPhysios.computeIfAbsent(treatment, k -> new HashSet<>()).add(physio);
                 }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
             }
         }
-        return choice;
-    }
 
-    private static LocalDate getValidDate(Scanner scanner, String prompt) {
-        LocalDate date = null;
-        while (date == null) {
-            System.out.print(prompt);
-            String input = scanner.nextLine();
-            try {
-                date = LocalDate.parse(input, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                if (date.isBefore(LocalDate.now())) {
-                    System.out.println("The date cannot be in the past. Please enter a future date.");
-                    date = null;
+        // Display all available treatments
+        List<String> treatments = new ArrayList<>(treatmentToPhysios.keySet());
+        if (treatments.isEmpty()) {
+            System.out.println("No treatments available at the moment.");
+            return;
+        }
+
+        //Seach Feature
+        System.out.println("Search for a Treatment:");
+        String searchQuery = scanner.nextLine().toLowerCase();
+        List<String> matchingTreatments = treatments.stream()
+                .filter(t -> t.toLowerCase().contains(searchQuery))
+                .collect(Collectors.toList());
+
+        if (matchingTreatments.isEmpty()) {
+            System.out.println("No matching treatments found.");
+            return;
+        }
+
+        System.out.println("Matching Treatments:");
+        for (int i = 0; i < matchingTreatments.size(); i++) {
+            System.out.println((i + 1) + ". " + matchingTreatments.get(i));
+        }
+
+        // Get user selection
+        int treatmentChoice = DataHelper.getValidNumberInput(scanner, 1, matchingTreatments.size(), "Enter your choice (1-" + matchingTreatments.size() + "): ");
+        String selectedTreatment = matchingTreatments.get(treatmentChoice - 1);
+
+        // Show physiotherapists offering the selected treatment
+        List<Physiotherapist> availablePhysios = new ArrayList<>(treatmentToPhysios.get(selectedTreatment));
+
+        System.out.println("Select a Physiotherapist who offers " + selectedTreatment + ":");
+        for (int i = 0; i < availablePhysios.size(); i++) {
+            System.out.println((i + 1) + ". " + availablePhysios.get(i).getFullName());
+        }
+
+        int physioChoice = DataHelper.getValidNumberInput(scanner, 1, availablePhysios.size(), "Enter your choice (1-" + availablePhysios.size() + "): ");
+        Physiotherapist selectedPhysio = availablePhysios.get(physioChoice - 1);
+
+        // Ask for appointment date
+        Appointment selectedAppointment = new Appointment();
+        while (true){
+            LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter appointment date (YYYY-MM-DD): ");
+
+            List<Appointment> availAppointments = bpc.filterAppointmentByDate(appointmentDate, selectedPhysio.getId());
+            if (availAppointments.isEmpty()) {
+                System.out.println("No appointments available for " + selectedPhysio.getFullName() + " on " + appointmentDate.toString() + ". Try another Date.");
+            }
+            else{
+                System.out.println("\nAvailable Time Slots for " + selectedPhysio.getFullName() + " on " + appointmentDate.toString());
+                for (int i = 0; i < availAppointments.size(); i++) {
+                    String appointmentDuration = DataHelper.getDurationAsString(availAppointments.get(i).getAppointmentTime(), availAppointments.get(i).getAppointmentDuration());
+                    System.out.println((i + 1) + ". " + appointmentDuration);
                 }
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+
+                // Let the user select a Slot
+                int slotChoice = DataHelper.getValidNumberInput(scanner, 1, availAppointments.size(), "Enter Slot number to book: ");
+                selectedAppointment = availAppointments.get(slotChoice - 1);
+                break;
             }
         }
-        return date;
+
+        bpc.updateAppointment(selectedAppointment, patientId, selectedTreatment);
+
+        System.out.println("\nYou have successfully booked:");
+        System.out.println("Physiotherapist: " + selectedPhysio.getFullName());
+        System.out.println("Treatment: " + selectedTreatment);
+        System.out.println("Appointment Date: " + selectedAppointment.getAppointmentDate());
+        System.out.println("Appointment Time: " + selectedAppointment.getAppointmentTime());
+
+        showPatientMenu(patientId);
     }
 
-    private static LocalTime getValidTime(Scanner scanner, String prompt) {
-        LocalTime time = null;
-        while (time == null) {
-            System.out.print(prompt);
-            String input = scanner.nextLine();
-            try {
-                time = LocalTime.parse(input, DateTimeFormatter.ofPattern("HH:mm"));
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid time format. Please use HH:MM in 24-hour format.");
+    private static void bookByAreaOfExpertise(Long patientId) {
+        List<Physiotherapist> physios = bpc.getAllPhysiotherapists();
+        Map<String, Set<Physiotherapist>> expertiseToPhysios = new HashMap<>();
+
+        // Gather all unique treatments and map them to physiotherapists
+        for (Physiotherapist physio : physios) {
+            for (Expertise expertise : physio.getAllExpertise()) {
+                expertiseToPhysios.computeIfAbsent(expertise.getName(), k -> new HashSet<>()).add(physio);
             }
         }
-        return time;
+
+        // Display all available treatments
+        List<String> expertiseLst = new ArrayList<>(expertiseToPhysios.keySet());
+        if (expertiseLst.isEmpty()) {
+            System.out.println("No Expertise available at the moment.");
+            return;
+        }
+
+        //Seach Feature
+        System.out.println("Search for a Expertise:");
+        String searchQuery = scanner.nextLine().toLowerCase();
+        List<String> matchingExpertise = expertiseLst.stream()
+                .filter(t -> t.toLowerCase().contains(searchQuery))
+                .collect(Collectors.toList());
+
+        if (matchingExpertise.isEmpty()) {
+            System.out.println("No matching treatments found.");
+            return;
+        }
+
+        System.out.println("Matching Treatments:");
+        for (int i = 0; i < matchingExpertise.size(); i++) {
+            System.out.println((i + 1) + ". " + matchingExpertise.get(i));
+        }
+
+        // Get user selection
+        int treatmentChoice = DataHelper.getValidNumberInput(scanner, 1, matchingExpertise.size(), "Enter your choice (1-" + matchingExpertise.size() + "): ");
+        String selectedExpertise = matchingExpertise.get(treatmentChoice - 1);
+
+        // Show physiotherapists offering the selected treatment
+        List<Physiotherapist> availablePhysios = new ArrayList<>(expertiseToPhysios.get(selectedExpertise));
+
+        System.out.println("Select a Physiotherapist who offers " + selectedExpertise + ":");
+        for (int i = 0; i < availablePhysios.size(); i++) {
+            System.out.println((i + 1) + ". " + availablePhysios.get(i).getFullName());
+        }
+
+        int physioChoice = DataHelper.getValidNumberInput(scanner, 1, availablePhysios.size(), "Enter your choice (1-" + availablePhysios.size() + "): ");
+        Physiotherapist selectedPhysio = availablePhysios.get(physioChoice - 1);
+
+        // Ask for appointment date
+        Appointment selectedAppointment = new Appointment();
+        while (true){
+            LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter appointment date (YYYY-MM-DD): ");
+
+            List<Appointment> availAppointments = bpc.filterAppointmentByDate(appointmentDate, selectedPhysio.getId());
+            if (availAppointments.isEmpty()) {
+                System.out.println("No appointments available for " + selectedPhysio.getFullName() + " on " + appointmentDate.toString() + ". Try another Date.");
+            }
+            else{
+                System.out.println("\nAvailable Time Slots for " + selectedPhysio.getFullName() + " on " + appointmentDate.toString());
+                for (int i = 0; i < availAppointments.size(); i++) {
+                    String appointmentDuration = DataHelper.getDurationAsString(availAppointments.get(i).getAppointmentTime(), availAppointments.get(i).getAppointmentDuration());
+                    System.out.println((i + 1) + ". " + appointmentDuration);
+                }
+
+                // Let the user select a Slot
+                int slotChoice = DataHelper.getValidNumberInput(scanner, 1, availAppointments.size(), "Enter Slot number to book: ");
+                selectedAppointment = availAppointments.get(slotChoice - 1);
+                break;
+            }
+        }
+
+        bpc.updateAppointment(selectedAppointment, patientId, selectedExpertise);
+
+        System.out.println("\nYou have successfully booked:");
+        System.out.println("Physiotherapist: " + selectedPhysio.getFullName());
+        System.out.println("Expertise: " + selectedExpertise);
+        System.out.println("Appointment Date: " + selectedAppointment.getAppointmentDate());
+        System.out.println("Appointment Time: " + selectedAppointment.getAppointmentTime());
+
+        showPatientMenu(patientId);
     }
 
-    public static void viewPatientAppointment(String patientId) {
+    private static void viewPatientAppointment(Long patientId) {
         bpc.printAppointmentsByPatient(patientId);
         showPatientMenu(patientId);
+    }
+
+    private static void cancelPatientAppointment(Long patientId) {
+        List<Appointment> appointmentList = bpc.getAppointmentsByPatientId(patientId);
+        if (appointmentList.isEmpty()) {
+            System.out.println("\nNo available appointments found.");
+            showPatientMenu(patientId);
+        }
+        else{
+            bpc.printAppointmentsByPatient(patientId);
+            int appointmentChoice = DataHelper.getValidNumberInput(scanner, 1, appointmentList.size(), "Enter appointment number you want to cancel (1-" + appointmentList.size() + "): ");
+            Appointment selectedAppointment = appointmentList.get(appointmentChoice - 1);
+            bpc.cancelAppointment(selectedAppointment);
+            System.out.println("\nYou have successfully CANCELLED an appointment");
+            showPatientMenu(patientId);
+        }
     }
 }

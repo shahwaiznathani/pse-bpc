@@ -27,7 +27,6 @@ public class Expertise {
         }
     }
 
-
     public List<String> getTreatments() {
         return treatments;
     }

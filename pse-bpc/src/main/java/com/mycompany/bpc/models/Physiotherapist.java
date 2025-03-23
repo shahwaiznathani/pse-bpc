@@ -9,10 +9,12 @@ import java.util.List;
 public class Physiotherapist extends Member{
     private List<Expertise> expertise;
 
-    public Physiotherapist(String id, String fullName, String address, String phoneNumber, String passwrod, List<Expertise> expertise) {
-        super(id, fullName, address, phoneNumber, passwrod);
+    public Physiotherapist(Long id, String fullName, String address, String phoneNumber, String password, List<Expertise> expertise) {
+        super(id, fullName, address, phoneNumber, password);
         this.expertise = expertise;
     }
+
+    public Physiotherapist(){}
 
     public void addTreatment(String treatment, String expertiseName) {
         for (Expertise exp : expertise) {

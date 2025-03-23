@@ -9,22 +9,24 @@ import java.time.*;
 public class Appointment {
     private LocalDate appointmentDate;
     private LocalTime appointmentTime;
+    private Long appointmentDuration; // Duration in minutes
     private LocalDateTime bookingDate;
-    private String physiotherapistId;
-    private String patientId;
+    private Long physiotherapistId;
+    private Long patientId;
     private String treatment;
     private String status;
 
     // Constructor, Getters, Setters
-    public Appointment(LocalDate appointmentDate, LocalTime appointmentTime, LocalDateTime bookingDate, String physiotherapistId, String patientId, String treatment, String status) {
+
+    public Appointment(LocalDate appointmentDate, LocalTime appointmentTime, Long appointmentDuration, Long physiotherapistId, String status) {
         this.appointmentDate = appointmentDate;
         this.appointmentTime = appointmentTime;
-        this.bookingDate = bookingDate;
+        this.appointmentDuration = appointmentDuration;
         this.physiotherapistId = physiotherapistId;
-        this.patientId = patientId;
-        this.treatment = treatment;
         this.status = status;
     }
+
+    public Appointment() {}
 
     public LocalTime getAppointmentTime() {
         return appointmentTime;
@@ -34,15 +36,19 @@ public class Appointment {
         return appointmentDate;
     }
 
+    public Long getAppointmentDuration() {
+        return appointmentDuration;
+    }
+
     public LocalDateTime getBookingDate() {
         return bookingDate;
     }
 
-    public String getPhysiotherapistId() {
+    public Long getPhysiotherapistId() {
         return physiotherapistId;
     }
 
-    public String getPatientId() {
+    public Long getPatientId() {
         return patientId;
     }
 
@@ -52,5 +58,25 @@ public class Appointment {
 
     public String getStatus() {
         return status;
+    }
+
+    public void setPatientId(Long patientId) {
+        this.patientId = patientId;
+    }
+
+    public void setTreatment(String treatment) {
+        this.treatment = treatment;
+    }
+
+    public void setBookingDate(LocalDateTime bookingDate) {
+        this.bookingDate = bookingDate;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setAppointmentDuration(Long appointmentDuration) {
+        this.appointmentDuration = appointmentDuration;
     }
 }
