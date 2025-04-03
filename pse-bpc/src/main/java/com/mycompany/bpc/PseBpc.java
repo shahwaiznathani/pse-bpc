@@ -16,7 +16,10 @@ public class PseBpc {
 
     public static void main(String[] args) {
         initializeData();
-        login();
+        System.out.println("===============================");
+        System.out.println("**Welcome to Boost Physio Clinic**");
+        System.out.println("===============================");
+        showDashboard();
     }
 
     private static void initializeData() {
@@ -25,50 +28,21 @@ public class PseBpc {
         List<Appointment> appointments = DataHelper.loadAppointments();
 
         bpc.bulkAddPatients(patientsData);
-        bpc.bulkAddPysiotherapists(physiotherapists);
+        bpc.bulkAddPhysiotherapists(physiotherapists);
         bpc.bulkAddAppointments(appointments);
     }
 
-    private static void login() {
-        System.out.println("\n **Welcome to Boost Physio Clinic** \n");
-        System.out.println("\n===============================");
-        System.out.println("Login to Boost Physio Clinic");
+    private static void showDashboard() {
         System.out.println("===============================");
-        System.out.print("Enter your User ID: ");
-
-        String userId = scanner.nextLine();
-
-        System.out.print("Enter Password: ");
-
-        String password = scanner.nextLine();
-
-        Optional<Patient> patient = bpc.getAllPatients().stream().filter(p -> p.getId().equals(Long.valueOf(userId)) && p.getPassword().equals(password)).findFirst();
-        Optional<Physiotherapist> physio = bpc.getAllPhysiotherapists().stream().filter(p -> p.getId().equals(Long.valueOf(userId)) && p.getPassword().equals(password)).findFirst();
-
-        if (patient.isPresent()) {
-            Patient patientData = patient.get();
-            Long patientId = patientData.getId();
-            System.out.println("Login Successful! Welcome, " + patient.get().getFullName());
-            showPatientMenu(patientId);
-        }
-        else if (physio.isPresent()) {
-            System.out.println("Login Successful! Welcome, " + physio.get().getFullName());
-            //showPhysiotherapistMenu(physio.get());
-        }
-        else {
-            System.out.println("Invalid Credentials! Please try again.");
-            login();
-        }
-    }
-
-    private static void showPatientMenu(Long patientId) {
-        System.out.println("\n===============================");
-        System.out.println("**Patient Dashboard**");
+        System.out.println("**Dashboard**");
         System.out.println("===============================");
         System.out.println("1. Book an Appointment");
-        System.out.println("2. View my Appointments");
-        System.out.println("3. Cancel an Appointment");
-        System.out.println("4. Logout");
+        System.out.println("2. Search Patient Appointments");
+        System.out.println("3. Change a Booking");
+        System.out.println("4. Search Physiotherapist Appointments");
+        System.out.println("5. Add a Patient");
+        System.out.println("6. Delete a Patient");
+        System.out.println("7. Attend an Appointment");
         System.out.println("===============================");
         System.out.print("Enter your choice: ");
 
@@ -77,24 +51,32 @@ public class PseBpc {
 
         switch (choice) {
             case 1:
-                bookingMenu(patientId);
+                bookingMenu();
                 break;
             case 2:
-                viewPatientAppointment(patientId);
+                viewPatientAppointment();
                 break;
             case 3:
-                cancelPatientAppointment(patientId);
+                changeBooking();
                 break;
             case 4:
-                System.out.println("\nThank you for using Boost Physio Clinic! Goodbye!");
-                scanner.close();
-                return;
+                viewPhysiotherapistAppointment();
+                break;
+            case 5:
+                addPatient();
+                break;
+            case 6:
+                removePatient();
+                break;
+            case 7:
+                attendAppointment();
+                break;
             default:
                 System.out.println("Invalid choice! Please try again.");
         }
     }
 
-    private static void bookingMenu(Long patientId) {
+    private static void bookingMenu() {
         System.out.println("\n===============================");
         System.out.println("**Appointment Booking**");
         System.out.println("===============================");
@@ -102,40 +84,35 @@ public class PseBpc {
         System.out.println("2. Search by Offered Treatments");
         System.out.println("3. Search by Area of Expertise");
         System.out.println("4. Return to Menu");
-        System.out.println("5. Logout");
         System.out.println("===============================");
         System.out.print("Enter your choice: ");
 
         int choice = scanner.nextInt();
-        scanner.nextLine();  // Consume newline
+        scanner.nextLine();
 
         switch (choice) {
             case 1:
-                bookByPhysiotherapist(patientId);
+                bookByPhysiotherapist();
                 break;
             case 2:
-                bookByTreatmentOffered(patientId);
+                bookByTreatmentOffered();
                 break;
             case 3:
-                bookByAreaOfExpertise(patientId);
+                bookByAreaOfExpertise();
                 break;
             case 4:
-                showPatientMenu(patientId);
+                showDashboard();
                 break;
-            case 5:
-                System.out.println("\nThank you for using Boost Physio Clinic! Goodbye!");
-                scanner.close();
-                return;
             default:
                 System.out.println("Invalid choice! Please try again.");
         }
     }
 
-    private static void bookByPhysiotherapist(Long patientId) {
+    private static void bookByPhysiotherapist() {
+        Long patientId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Patient ID: ");
         Physiotherapist selectedPhysio = new Physiotherapist();
         while (true) {
-            System.out.print("Search Physiotherapist by name (e.g., Dr Shahwaiz): ");
-            String input = scanner.nextLine();
+            String input = DataHelper.getStringInput(scanner, "Search Physiotherapist by name (e.g., Dr Shahwaiz): ");
             List<Physiotherapist> lst = bpc.searchPhysiotherapist(input);
 
             if (lst.isEmpty()) {
@@ -221,10 +198,11 @@ public class PseBpc {
         System.out.println("Appointment Date: " + selectedAppointment.getAppointmentDate());
         System.out.println("Appointment Time: " + selectedAppointment.getAppointmentTime());
 
-        showPatientMenu(patientId);
+        showDashboard();
     }
 
-    private static void bookByTreatmentOffered(Long patientId) {
+    private static void bookByTreatmentOffered() {
+        Long patientId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Patient ID: ");
         List<Physiotherapist> physios = bpc.getAllPhysiotherapists();
         Map<String, Set<Physiotherapist>> treatmentToPhysios = new HashMap<>();
 
@@ -244,9 +222,8 @@ public class PseBpc {
             return;
         }
 
-        //Seach Feature
-        System.out.println("Search for a Treatment:");
-        String searchQuery = scanner.nextLine().toLowerCase();
+        //Search Feature
+        String searchQuery = DataHelper.getStringInput(scanner, "Search for a Treatment: ");
         List<String> matchingTreatments = treatments.stream()
                 .filter(t -> t.toLowerCase().contains(searchQuery))
                 .collect(Collectors.toList());
@@ -307,10 +284,11 @@ public class PseBpc {
         System.out.println("Appointment Date: " + selectedAppointment.getAppointmentDate());
         System.out.println("Appointment Time: " + selectedAppointment.getAppointmentTime());
 
-        showPatientMenu(patientId);
+        showDashboard();
     }
 
-    private static void bookByAreaOfExpertise(Long patientId) {
+    private static void bookByAreaOfExpertise() {
+        Long patientId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Patient ID: ");
         List<Physiotherapist> physios = bpc.getAllPhysiotherapists();
         Map<String, Set<Physiotherapist>> expertiseToPhysios = new HashMap<>();
 
@@ -328,9 +306,8 @@ public class PseBpc {
             return;
         }
 
-        //Seach Feature
-        System.out.println("Search for a Expertise:");
-        String searchQuery = scanner.nextLine().toLowerCase();
+        //Search Feature
+        String searchQuery = DataHelper.getStringInput(scanner, "Search for a Expertise:");
         List<String> matchingExpertise = expertiseLst.stream()
                 .filter(t -> t.toLowerCase().contains(searchQuery))
                 .collect(Collectors.toList());
@@ -391,27 +368,98 @@ public class PseBpc {
         System.out.println("Appointment Date: " + selectedAppointment.getAppointmentDate());
         System.out.println("Appointment Time: " + selectedAppointment.getAppointmentTime());
 
-        showPatientMenu(patientId);
+        showDashboard();
     }
 
-    private static void viewPatientAppointment(Long patientId) {
+    private static void changeBooking() {
+        System.out.println("\n===============================");
+        System.out.println("**Update Booking**");
+        System.out.println("===============================");
+        System.out.println("1. Cancel an Appointment");
+        System.out.println("2. Cancel and Book a new Appointment");
+        System.out.println("3. Return to Menu");
+        System.out.println("===============================");
+        System.out.print("Enter your choice: ");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        switch (choice) {
+            case 1:
+                cancelPatientAppointment();
+                showDashboard();
+                break;
+            case 2:
+                cancelPatientAppointment();
+                bookingMenu();
+                break;
+            case 3:
+                showDashboard();
+                break;
+            default:
+                System.out.println("Invalid choice! Please try again.");
+        }
+    }
+
+    private static void viewPatientAppointment() {
+        Long patientId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Patient ID: ");
         bpc.printAppointmentsByPatient(patientId);
-        showPatientMenu(patientId);
+        showDashboard();
     }
 
-    private static void cancelPatientAppointment(Long patientId) {
-        List<Appointment> appointmentList = bpc.getAppointmentsByPatientId(patientId);
+    public static void viewPhysiotherapistAppointment() {
+        Long physioId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Physiotherapist ID: ");
+        bpc.printAppointmentsByPhysiotherapist(physioId);
+        showDashboard();
+    }
+
+    private static void cancelPatientAppointment() {
+        Long patientId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Patient ID: ");
+        List<Appointment> appointmentList = bpc.getBookedAppointmentsByPatientId(patientId);
         if (appointmentList.isEmpty()) {
-            System.out.println("\nNo available appointments found.");
-            showPatientMenu(patientId);
+            System.out.println("\nNo available appointments found that have been booked.");
         }
         else{
-            bpc.printAppointmentsByPatient(patientId);
+            bpc.printBookedAppointmentsByPatient(patientId);
             int appointmentChoice = DataHelper.getValidNumberInput(scanner, 1, appointmentList.size(), "Enter appointment number you want to cancel (1-" + appointmentList.size() + "): ");
             Appointment selectedAppointment = appointmentList.get(appointmentChoice - 1);
             bpc.cancelAppointment(selectedAppointment);
             System.out.println("\nYou have successfully CANCELLED an appointment");
-            showPatientMenu(patientId);
         }
+    }
+
+    private static void attendAppointment() {
+        Long patientId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Patient ID: ");
+        List<Appointment> appointmentList = bpc.getBookedAppointmentsByPatientId(patientId);
+        if (appointmentList.isEmpty()) {
+            System.out.println("\nNo available appointments found that have been booked.");
+            showDashboard();
+        }
+        else{
+            bpc.printBookedAppointmentsByPatient(patientId);
+            int appointmentChoice = DataHelper.getValidNumberInput(scanner, 1, appointmentList.size(), "Enter appointment number you want to attend (1-" + appointmentList.size() + "): ");
+            Appointment selectedAppointment = appointmentList.get(appointmentChoice - 1);
+            bpc.attendAppointment(selectedAppointment);
+            System.out.println("\nAppointment have been marked as attended.");
+            showDashboard();
+        }
+    }
+
+    private static void addPatient(){
+        String name = DataHelper.getStringInput(scanner, "Enter Patient's Full Name: ");
+        String address = DataHelper.getStringInput(scanner, "Enter Patient's Address: ");
+        String phoneNumber = DataHelper.getStringInput(scanner, "Enter Patient's Mobile Number: ");
+        Long id = bpc.GetNewPatientId();
+        Patient newPatient = new Patient(id, name, address, phoneNumber);
+        bpc.addPatient(newPatient);
+        System.out.println(name + " has been added with Id: "+ id + ".");
+        showDashboard();
+    }
+
+    private static void removePatient(){
+        Long patientId = DataHelper.getValidId(scanner, 3000, 4000, "Enter Patient ID for account deletion: ");
+        bpc.removePatient(patientId);
+        System.out.println( "Patient with Id " + patientId + " has been deleted.");
+        showDashboard();
     }
 }

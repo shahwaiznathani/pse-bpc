@@ -45,18 +45,20 @@ public class BookingSystem {
         return patients;
     }
 
-    public void removePatient(Patient patient) {
-        patients.remove(patient);
+    public void removePatient(Long patientId) {
+        patients.removeIf(obj -> Objects.equals(obj.getId(), patientId));
     }
 
+    public Long GetNewPatientId(){
+        return patients.stream()
+                .mapToLong(Patient::getId)
+                .max()
+                .orElse(0) + 1;
+    }
 
 
     //Physiotherapist Functions
-    public void addPysiotherapist(Physiotherapist physiotherapist) {
-        physiotherapists.add(physiotherapist);
-    }
-
-    public void bulkAddPysiotherapists(List<Physiotherapist> physiotherapistsList) {
+    public void bulkAddPhysiotherapists(List<Physiotherapist> physiotherapistsList) {
         physiotherapists.addAll(physiotherapistsList);
     }
 
@@ -68,24 +70,6 @@ public class BookingSystem {
 
     public List<Physiotherapist> getAllPhysiotherapists() {
         return physiotherapists;
-    }
-
-    public void removePysiotherapist(Physiotherapist physiotherapist) {
-        physiotherapists.remove(physiotherapist);
-    }
-
-    public List<Physiotherapist> findPhysiotherapistsByTreatment(String treatment) {
-        List<Physiotherapist> result = new ArrayList<>();
-
-        for (Physiotherapist physio : physiotherapists) {
-            for (Expertise expertise : physio.getAllExpertise()) {
-                if (expertise.getTreatments().contains(treatment)) {
-                    result.add(physio);
-                    break; // Stop checking further once a match is found
-                }
-            }
-        }
-        return result;
     }
 
 
@@ -116,7 +100,11 @@ public class BookingSystem {
     }
 
     public void cancelAppointment(Appointment appointment) {
-        appointment.setStatus("Cancelled by Patient");
+        appointment.setStatus("Cancelled");
+    }
+
+    public void attendAppointment(Appointment appointment) {
+        appointment.setStatus("Attended");
     }
 
     public List<Appointment> getAppointments() {
@@ -133,10 +121,32 @@ public class BookingSystem {
         return result;
     }
 
+    public List<Appointment> getBookedAppointmentsByPatientId(Long patientId) {
+        List<Appointment> result = new ArrayList<>();
+        for (Appointment appointment : appointments) {
+            if (appointment.getPatientId() != null && appointment.getPatientId().equals(patientId) && appointment.getStatus().equalsIgnoreCase("booked")) {
+                result.add(appointment);
+            }
+        }
+        return result;
+    }
+
     // Function to print all appointments for a specific patient
     public void printAppointmentsByPatient(Long patientId) {
         List<Appointment> filteredAppointments = getAppointmentsByPatientId(patientId);
-        System.out.println("\n*** YOUR APPOINTMENTS ***\n");
+        System.out.println("\n*** APPOINTMENTS ***\n");
+        printHeader();
+        int counter = 0;
+        for (Appointment appointment : filteredAppointments) {
+            counter++;
+            printAppointmentDetails(counter, appointment);
+        }
+        System.out.println("---------------------------------------------------------------------------------------------------------");
+    }
+
+    public void printBookedAppointmentsByPatient(Long patientId) {
+        List<Appointment> filteredAppointments = getBookedAppointmentsByPatientId(patientId);
+        System.out.println("\n*** APPOINTMENTS ***\n");
         printHeader();
         int counter = 0;
         for (Appointment appointment : filteredAppointments) {
@@ -147,8 +157,8 @@ public class BookingSystem {
     }
 
     // Function to print all appointments for a specific physiotherapist
-    public void printAppointmentsByPhysiotherapist(String physiotherapistId) {
-        System.out.println("\n *** APPOINTMENTS FOR PHYSIOTHERAPIST: " + physiotherapistId + " *** \n");
+    public void printAppointmentsByPhysiotherapist(Long physiotherapistId) {
+        System.out.println("\n*** APPOINTMENTS ***\n");
         printHeader();
         int counter = 0;
         for (Appointment appointment : appointments) {
@@ -197,13 +207,13 @@ public class BookingSystem {
 
     // Function to get an emoji icon for the status
     private String getStatusIcon(String status) {
-        switch (status.toLowerCase()) {
-            case "scheduled": return "✅ Scheduled";
-            case "completed": return "🎉 Completed";
-            case "cancelled": return "❌ Cancelled";
-            case "pending": return "⏳ Pending";
-            default: return status;
-        }
+        return switch (status.toLowerCase()) {
+            case "confirmed" -> "✅ Confirmed";
+            case "attended" -> "🎉 Attended";
+            case "cancelled" -> "❌ Cancelled";
+            case "booked" -> "⏳ Booked";
+            default -> status;
+        };
     }
 
     public List<Physiotherapist> searchPhysiotherapist(String name) {
@@ -215,11 +225,13 @@ public class BookingSystem {
     // Filter by date
     public List<Appointment> filterAppointmentByDate(LocalDate date, Long physiotherapistId) {
         return appointments.stream()
-                .filter(appointment -> appointment.getAppointmentDate().equals(date) && appointment.getPhysiotherapistId().equals(physiotherapistId))
+                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed") &&
+                        appointment.getAppointmentDate().equals(date) &&
+                        appointment.getPhysiotherapistId().equals(physiotherapistId))
                 .collect(Collectors.toList());
     }
 
-    public boolean updateAppointment(Appointment selectedAppointment, Long patientId, String treatment) {
+    public void updateAppointment(Appointment selectedAppointment, Long patientId, String treatment) {
         for (Appointment appointment : appointments) {
             if (appointment.getAppointmentDate().equals(selectedAppointment.getAppointmentDate()) &&
                     appointment.getAppointmentTime().equals(selectedAppointment.getAppointmentTime()) &&
@@ -231,13 +243,7 @@ public class BookingSystem {
                 appointment.setStatus("Booked");
                 appointment.setBookingDate(LocalDateTime.now());
                 appointment.setTreatment(treatment);
-                return true;  // Successfully updated
             }
         }
-        return false;  // No matching appointment found
-    }
-
-    public void getallTreatments() {
-
     }
 }

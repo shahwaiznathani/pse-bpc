@@ -19,10 +19,11 @@ public class DataHelper {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] data = line.split(",");
-                patients.add(new Patient(Long.valueOf(data[0]), data[1], data[2], data[3], data[4]));
+                patients.add(new Patient(Long.valueOf(data[0]), data[1], data[2], data[3]));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage());
         }
         return patients;
     }
@@ -44,13 +45,12 @@ public class DataHelper {
                 String fullName = data[1].trim();
                 String address = data[2].trim();
                 String phoneNumber = data[3].trim();
-                String password = data[4].trim();
 
                 // Process expertise and treatments
                 List<Expertise> expertiseList = new ArrayList<>();
 
                 // Iterate over each expertise/treatment pair (starting from the 5th element in the data array)
-                for (int i = 5; i < data.length; i++) {
+                for (int i = 4; i < data.length; i++) {
                     String expertiseWithTreatments = data[i].trim();
 
                     // Split expertise and its treatments
@@ -70,11 +70,12 @@ public class DataHelper {
                 }
 
                 // Create and add a new Physiotherapist to the list
-                Physiotherapist physiotherapist = new Physiotherapist(id, fullName, address, phoneNumber, password, expertiseList);
+                Physiotherapist physiotherapist = new Physiotherapist(id, fullName, address, phoneNumber, expertiseList);
                 physiotherapists.add(physiotherapist);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage());
         }
 
         return physiotherapists;
@@ -102,8 +103,9 @@ public class DataHelper {
                 // Create and add an Appointment object
                 appointments.add(new Appointment(appointmentDate, appointmentTime, appointmentDuration, physiotherapistId, status));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage());
         }
 
         return appointments;
@@ -116,7 +118,23 @@ public class DataHelper {
             try {
                 choice = Integer.parseInt(scanner.nextLine());
                 if (choice < min || choice > max) {
-                    System.out.println("Invalid choice. Please select a valid number.");
+                    System.out.println("Invalid choice. Please enter a valid number.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+            }
+        }
+        return choice;
+    }
+
+    public static long getValidId(Scanner scanner, int min, int max, String prompt) {
+        long choice = -1;
+        while (choice < min || choice > max) {
+            System.out.print(prompt);
+            try {
+                choice = Long.parseLong(scanner.nextLine());
+                if (choice < min || choice > max) {
+                    System.out.println("Invalid choice. Please select a valid ID.");
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number.");
@@ -143,18 +161,10 @@ public class DataHelper {
         return date;
     }
 
-    public static LocalTime getValidTime(Scanner scanner, String prompt) {
-        LocalTime time = null;
-        while (time == null) {
-            System.out.print(prompt);
-            String input = scanner.nextLine();
-            try {
-                time = LocalTime.parse(input, DateTimeFormatter.ofPattern("HH:mm"));
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid time format. Please use HH:MM in 24-hour format.");
-            }
-        }
-        return time;
+    public static String getStringInput(Scanner scanner, String prompt){
+        System.out.println(prompt);
+        String inputString = scanner.nextLine();
+        return inputString.toLowerCase();
     }
 
     public static String getDurationAsString(LocalTime time, long duration) {

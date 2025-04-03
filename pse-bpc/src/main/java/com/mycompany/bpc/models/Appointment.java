@@ -16,8 +16,6 @@ public class Appointment {
     private String treatment;
     private String status;
 
-    // Constructor, Getters, Setters
-
     public Appointment(LocalDate appointmentDate, LocalTime appointmentTime, Long appointmentDuration, Long physiotherapistId, String status) {
         this.appointmentDate = appointmentDate;
         this.appointmentTime = appointmentTime;

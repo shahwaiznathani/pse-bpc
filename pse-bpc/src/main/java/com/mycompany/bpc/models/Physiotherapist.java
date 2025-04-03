@@ -9,8 +9,8 @@ import java.util.List;
 public class Physiotherapist extends Member{
     private List<Expertise> expertise;
 
-    public Physiotherapist(Long id, String fullName, String address, String phoneNumber, String password, List<Expertise> expertise) {
-        super(id, fullName, address, phoneNumber, password);
+    public Physiotherapist(Long id, String fullName, String address, String phoneNumber, List<Expertise> expertise) {
+        super(id, fullName, address, phoneNumber);
         this.expertise = expertise;
     }
 
