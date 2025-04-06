@@ -1,4 +1,5 @@
 package com.mycompany.bpc.models;
+
 /**
  *
  * @author shahwaizshaban

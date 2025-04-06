@@ -12,18 +12,14 @@ import java.time.*;
 public class BookingSystem {
     private List<Physiotherapist> physiotherapists;
     private List<Patient> patients;
-    private List<Appointment> appointments;
-
-    public BookingSystem(List<Physiotherapist> physiotherapists, List<Patient> patients, List<Appointment> appointments) {
-        this.physiotherapists = physiotherapists;
-        this.patients = patients;
-        this.appointments = appointments;
-    }
+    private List<Treatment> treatments;
+    private List<Booking> bookings;
 
     public BookingSystem() {
         this.physiotherapists = new ArrayList<>();
         this.patients = new ArrayList<>();
-        this.appointments = new ArrayList<>();
+        this.treatments = new ArrayList<>();
+        this.bookings = new ArrayList<>();
     }
 
     //Patient Functions
@@ -72,141 +68,164 @@ public class BookingSystem {
         return physiotherapists;
     }
 
+    public List<Physiotherapist> searchPhysiotherapist(String name) {
+        return physiotherapists.stream()
+                .filter(p -> (name == null || p.getFullName().toLowerCase().contains(name.toLowerCase())))
+                .collect(Collectors.toList());
+    }
 
-    //Appointment Functions
-    public boolean bookAppointment(Appointment newAppointment) {
-        Patient patient = getPatientById(newAppointment.getPatientId()).get();
-        Physiotherapist physiotherapist = getPhysiotherapistById(newAppointment.getPhysiotherapistId()).get();
-        for (Appointment existingAppointment : appointments) {
-            if (existingAppointment.getPhysiotherapistId().equals(newAppointment.getPhysiotherapistId()) &&
-                    existingAppointment.getAppointmentDate().equals(newAppointment.getAppointmentDate())) {
 
-                // Conflict found, reject the appointment
-                System.out.println("❌ ERROR: Conflict! Physiotherapist " + patient.getFullName() +
-                        " already has an appointment at " + newAppointment.getAppointmentDate());
-                return false;
-            }
+    //Treatment Functions
+    public void bulkAddTreatments(List<Treatment> treatementsList) {
+        treatments.addAll(treatementsList);
+    }
+
+    public List<Treatment> filterTreatmentsByDate(LocalDate date, Long physiotherapistId) {
+        return treatments.stream()
+                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed") &&
+                        appointment.getAppointmentDate().equals(date) &&
+                        appointment.getPhysiotherapistId().equals(physiotherapistId))
+                .collect(Collectors.toList());
+    }
+
+    public List<Treatment> filterTreatmentsByDateAndPhysiotherapists(LocalDate date, List<Physiotherapist> physiotherapists) {
+        Set<Long> physiotherapistIds = physiotherapists.stream()
+                .map(Physiotherapist::getId)
+                .collect(Collectors.toSet());
+
+        return treatments.stream()
+                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed") &&
+                        appointment.getAppointmentDate().equals(date) &&
+                        physiotherapistIds.contains(appointment.getPhysiotherapistId()))
+                .sorted(Comparator.comparing(Treatment::getAppointmentTime)) // Sort by time
+                .collect(Collectors.toList());
+    }
+
+    public void printCustomTreatments(List<Treatment> customTreatments) {
+        System.out.println("\n*** Treatment Available ***\n");
+        System.out.printf("%-5s | %-20s | %-30s | %-15s | %-15s\n",
+                "S.No", "Physiotherapist", "Treatment", "Date", "Time");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
+        int counter = 0;
+        for (Treatment appointment : customTreatments) {
+            counter++;
+            Physiotherapist physiotherapist = getPhysiotherapistById(appointment.getPhysiotherapistId()).get();
+            String appointmentDuration = DataHelper.getDurationAsString(appointment.getAppointmentTime(), appointment.getAppointmentDuration());
+            System.out.printf("%-5s | %-20s | %-30s | %-15s | %-15s\n",
+                    counter,
+                    physiotherapist.getFullName(),
+                    appointment.getName(),
+                    appointment.getAppointmentDate(),
+                    appointmentDuration);
         }
-
-        // ✅ No conflict, appointment is added
-        appointments.add(newAppointment);
-        System.out.println("✅ Appointment booked successfully for " + patient.getFullName() +
-                " with " + physiotherapist.getFullName() + " on " + newAppointment.getAppointmentDate());
-        return true;
+        System.out.println("---------------------------------------------------------------------------------------------------------");
     }
 
-    public void bulkAddAppointments(List<Appointment> appointmentsList) {
-        appointments.addAll(appointmentsList);
+
+    //Booking Functions
+    public void addBooking(Booking booking) {
+        bookings.add(booking);
     }
 
-    public void cancelAppointment(Appointment appointment) {
-        appointment.setStatus("Cancelled");
+    public void cancelBooking(Booking booking) {
+        booking.setStatus("Cancelled");
     }
 
-    public void attendAppointment(Appointment appointment) {
-        appointment.setStatus("Attended");
+    public void attendBooking(Booking booking) {
+        booking.setStatus("Attended");
     }
 
-    public List<Appointment> getAppointments() {
-        return appointments;
+    public void updateTreatmentStatus(Treatment treatment, String status) {
+        treatment.setStatus(status);
     }
 
-    public List<Appointment> getAppointmentsByPatientId(Long patientId) {
-        List<Appointment> result = new ArrayList<>();
-        for (Appointment appointment : appointments) {
-            if (appointment.getPatientId() != null && appointment.getPatientId().equals(patientId)) {
-                result.add(appointment);
+    public List<Booking> getBookingsByPatientId(Long patientId) {
+        List<Booking> result = new ArrayList<>();
+        for (Booking booking : bookings) {
+            if (booking.getPatientId() != null && booking.getPatientId().equals(patientId)) {
+                result.add(booking);
             }
         }
         return result;
     }
 
-    public List<Appointment> getBookedAppointmentsByPatientId(Long patientId) {
-        List<Appointment> result = new ArrayList<>();
-        for (Appointment appointment : appointments) {
-            if (appointment.getPatientId() != null && appointment.getPatientId().equals(patientId) && appointment.getStatus().equalsIgnoreCase("booked")) {
-                result.add(appointment);
+    public List<Booking> getBookingsByPhysiotherapistId(Long physiotherapistId) {
+        List<Booking> result = new ArrayList<>();
+        for (Booking booking : bookings) {
+            if (booking.getPhysiotherapistId() != null && booking.getPhysiotherapistId().equals(physiotherapistId)) {
+                result.add(booking);
             }
         }
         return result;
     }
 
-    // Function to print all appointments for a specific patient
-    public void printAppointmentsByPatient(Long patientId) {
-        List<Appointment> filteredAppointments = getAppointmentsByPatientId(patientId);
-        System.out.println("\n*** APPOINTMENTS ***\n");
-        printHeader();
-        int counter = 0;
-        for (Appointment appointment : filteredAppointments) {
-            counter++;
-            printAppointmentDetails(counter, appointment);
-        }
-        System.out.println("---------------------------------------------------------------------------------------------------------");
-    }
-
-    public void printBookedAppointmentsByPatient(Long patientId) {
-        List<Appointment> filteredAppointments = getBookedAppointmentsByPatientId(patientId);
-        System.out.println("\n*** APPOINTMENTS ***\n");
-        printHeader();
-        int counter = 0;
-        for (Appointment appointment : filteredAppointments) {
-            counter++;
-            printAppointmentDetails(counter, appointment);
-        }
-        System.out.println("---------------------------------------------------------------------------------------------------------");
-    }
-
-    // Function to print all appointments for a specific physiotherapist
-    public void printAppointmentsByPhysiotherapist(Long physiotherapistId) {
-        System.out.println("\n*** APPOINTMENTS ***\n");
-        printHeader();
-        int counter = 0;
-        for (Appointment appointment : appointments) {
-            counter++;
-            if (appointment.getPhysiotherapistId().equals(physiotherapistId)) {
-                printAppointmentDetails(counter, appointment);
-            }
-        }
-        System.out.println("------------------------------------------------------\n");
-    }
-
-    // Function to print all appointments
-    public void printAllAppointments() {
-        System.out.println("\n*** ALL APPOINTMENTS ***\n");
-        printHeader();
-        int counter = 0;
-        for (Appointment appointment : appointments) {
-            counter++;
-            printAppointmentDetails(counter, appointment);
-        }
-        System.out.println("------------------------------------------------------\n");
-    }
-
-    // Helper function to print the header
-    private void printHeader() {
-        System.out.printf("%-5s | %-15s | %-20s | %-20s | %-15s | %-15s | %-10s\n",
-                "S.No", "Patient", "Physiotherapist", "Treatment", "Date", "Time", "Status");
-        System.out.println("---------------------------------------------------------------------------------------------------------");
-    }
-
-    // Helper function to print formatted appointment details
-    private void printAppointmentDetails(int SNo, Appointment appointment) {
-        Patient patient = getPatientById(appointment.getPatientId()).get();
-        Physiotherapist physiotherapist = getPhysiotherapistById(appointment.getPhysiotherapistId()).get();
-        String statusIcon = getStatusIcon(appointment.getStatus());
-        String appointmentDuration = DataHelper.getDurationAsString(appointment.getAppointmentTime(), appointment.getAppointmentDuration());
-        System.out.printf("%-5s | %-15s | %-20s | %-20s | %-15s | %-15s | %s\n",
-                SNo,
+    public void printBookingDetails(int SNo, Booking booking) {
+        Patient patient = getPatientById(booking.getPatientId()).get();
+        Physiotherapist physiotherapist = getPhysiotherapistById(booking.getPhysiotherapistId()).get();
+        String statusIcon = getStatusIcon(booking.getStatus());
+        String bookingDuration = DataHelper.getDurationAsString(booking.getBookingTime(), booking.getBookingDuration());
+        System.out.printf("%-10s | %-15s | %-20s | %-20s | %-15s | %-15s | %s\n",
+                booking.getId(),
                 patient.getFullName(),
                 physiotherapist.getFullName(),
-                appointment.getTreatment(),
-                appointment.getAppointmentDate(),
-                appointmentDuration,
+                booking.getTreatmentName(),
+                booking.getBookingDate(),
+                bookingDuration,
                 statusIcon);
     }
 
-    // Function to get an emoji icon for the status
-    private String getStatusIcon(String status) {
+    public void printAllBookings() {
+        System.out.println("\n*** ALL Bookings ***\n");
+        printHeader();
+        int counter = 0;
+        for (Booking booking : bookings) {
+            counter++;
+            printBookingDetails(counter, booking);
+        }
+        System.out.println("------------------------------------------------------\n");
+    }
+
+    public void printBookingsByPhysiotherapist(Long physiotherapistId) {
+        List<Booking> filteredBookings = getBookingsByPhysiotherapistId(physiotherapistId);
+        if (filteredBookings.isEmpty()) {
+            System.out.println("No bookings found for physiotherapist " + physiotherapistId);
+        }
+        else{
+            System.out.println("\n*** BOOKING ***\n");
+            printHeader();
+            int counter = 0;
+            for (Booking booking : filteredBookings) {
+                counter++;
+                printBookingDetails(counter, booking);
+            }
+            System.out.println("---------------------------------------------------------------------------------------------------------");
+        }
+    }
+
+    public void printBookingsByPatient(Long patientId) {
+        List<Booking> filteredBookings = getBookingsByPatientId(patientId);
+        if (filteredBookings.isEmpty()) {
+            System.out.println("No bookings found for patient " + patientId);
+        }
+        else{
+            System.out.println("\n*** BOOKING ***\n");
+            printHeader();
+            int counter = 0;
+            for (Booking booking : filteredBookings) {
+                counter++;
+                printBookingDetails(counter, booking);
+            }
+            System.out.println("---------------------------------------------------------------------------------------------------------");
+        }
+    }
+
+    public void printHeader() {
+        System.out.printf("%-10s | %-15s | %-20s | %-20s | %-15s | %-15s | %-10s\n",
+                "Booking Id", "Patient", "Physiotherapist", "Treatment", "Date", "Time", "Status");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
+    }
+
+    public String getStatusIcon(String status) {
         return switch (status.toLowerCase()) {
             case "confirmed" -> "✅ Confirmed";
             case "attended" -> "🎉 Attended";
@@ -214,36 +233,5 @@ public class BookingSystem {
             case "booked" -> "⏳ Booked";
             default -> status;
         };
-    }
-
-    public List<Physiotherapist> searchPhysiotherapist(String name) {
-        return physiotherapists.stream()
-                .filter(p -> (name == null || p.getFullName().toLowerCase().contains(name.toLowerCase())))
-                .collect(Collectors.toList());
-    }
-
-    // Filter by date
-    public List<Appointment> filterAppointmentByDate(LocalDate date, Long physiotherapistId) {
-        return appointments.stream()
-                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed") &&
-                        appointment.getAppointmentDate().equals(date) &&
-                        appointment.getPhysiotherapistId().equals(physiotherapistId))
-                .collect(Collectors.toList());
-    }
-
-    public void updateAppointment(Appointment selectedAppointment, Long patientId, String treatment) {
-        for (Appointment appointment : appointments) {
-            if (appointment.getAppointmentDate().equals(selectedAppointment.getAppointmentDate()) &&
-                    appointment.getAppointmentTime().equals(selectedAppointment.getAppointmentTime()) &&
-                    appointment.getPhysiotherapistId().equals(selectedAppointment.getPhysiotherapistId()) &&
-                    appointment.getStatus().equalsIgnoreCase("Confirmed")) {
-
-                // Update appointment details
-                appointment.setPatientId(patientId);
-                appointment.setStatus("Booked");
-                appointment.setBookingDate(LocalDateTime.now());
-                appointment.setTreatment(treatment);
-            }
-        }
     }
 }

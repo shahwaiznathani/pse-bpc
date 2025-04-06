@@ -38,7 +38,7 @@ public class DataHelper {
                 // Split the line into its parts: ID, name, address, phone, password, expertise with treatments
                 String[] data = line.split(",");
 
-                if (data.length < 6) continue;  // Skip invalid lines (e.g., less than 6 parts)
+                if (data.length < 5) continue;  // Skip invalid lines (e.g., less than 6 parts)
 
                 // Read basic details
                 Long id = Long.valueOf(data[0].trim());
@@ -46,27 +46,16 @@ public class DataHelper {
                 String address = data[2].trim();
                 String phoneNumber = data[3].trim();
 
-                // Process expertise and treatments
-                List<Expertise> expertiseList = new ArrayList<>();
+                // Extract the expertise list, which is the last element in the data array
+                String expertiseString = data[4].trim();
 
-                // Iterate over each expertise/treatment pair (starting from the 5th element in the data array)
-                for (int i = 4; i < data.length; i++) {
-                    String expertiseWithTreatments = data[i].trim();
+                // Split the expertise by the '|' character and add to the list
+                String[] expertiseArray = expertiseString.split("\\|");
+                List<String> expertiseList = new ArrayList<>();
 
-                    // Split expertise and its treatments
-                    String[] expertiseParts = expertiseWithTreatments.split(":");
-                    if (expertiseParts.length < 2) continue;  // Skip invalid expertise data
-
-                    String expertiseName = expertiseParts[0].trim();
-                    String[] rawTreatments = expertiseParts[1].split("\\|");
-                    List<String> treatments = new ArrayList<>();
-
-                    for (String treatment : rawTreatments) {
-                        treatments.add(treatment.trim());
-                    }
-
-                    // Create an Expertise object and add it to the list
-                    expertiseList.add(new Expertise(expertiseName, treatments));
+                // Add each expertise into the list (trim any whitespace)
+                for (String expertise : expertiseArray) {
+                    expertiseList.add(expertise.trim());
                 }
 
                 // Create and add a new Physiotherapist to the list
@@ -81,8 +70,8 @@ public class DataHelper {
         return physiotherapists;
     }
 
-    public static List<Appointment> loadAppointments() {
-        List<Appointment> appointments = new ArrayList<>();
+    public static List<Treatment> loadTreatments() {
+        List<Treatment> appointments = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(APPOINTMENTS_FILE))) {
             String line;
@@ -91,7 +80,7 @@ public class DataHelper {
                 // Split the line into its parts: appointmentDate, appointmentTime, physiotherapistId, patientId, status
                 String[] data = line.split(",");
 
-                if (data.length < 5) continue;  // Skip invalid lines
+                if (data.length < 6) continue;  // Skip invalid lines
 
                 // Read details and trim whitespace
                 LocalDate appointmentDate = LocalDate.parse(data[0].trim());
@@ -99,9 +88,10 @@ public class DataHelper {
                 Long appointmentDuration = Long.valueOf(data[2].trim());
                 Long physiotherapistId = Long.valueOf(data[3].trim());
                 String status = data[4].trim();
+                String treatmentName = data[5].trim();
 
                 // Create and add an Appointment object
-                appointments.add(new Appointment(appointmentDate, appointmentTime, appointmentDuration, physiotherapistId, status));
+                appointments.add(new Treatment(appointmentDate, appointmentTime, appointmentDuration, physiotherapistId, status, treatmentName));
             }
         }
         catch (IOException e) {

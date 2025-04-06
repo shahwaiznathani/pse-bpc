@@ -1,30 +1,38 @@
 package com.mycompany.bpc.models;
 
 import java.time.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
  * @author shahwaizshaban
  */
-public class Appointment {
+public class Treatment {
+    private Long id;
     private LocalDate appointmentDate;
     private LocalTime appointmentTime;
-    private Long appointmentDuration; // Duration in minutes
-    private LocalDateTime bookingDate;
+    private Long appointmentDuration;
     private Long physiotherapistId;
-    private Long patientId;
-    private String treatment;
+    private String name;
     private String status;
+    private static final AtomicLong appointmentCounter = new AtomicLong(3000000);
 
-    public Appointment(LocalDate appointmentDate, LocalTime appointmentTime, Long appointmentDuration, Long physiotherapistId, String status) {
+    public Treatment(LocalDate appointmentDate, LocalTime appointmentTime, Long appointmentDuration, Long physiotherapistId, String status, String name) {
+        this.id = appointmentCounter.incrementAndGet();
         this.appointmentDate = appointmentDate;
         this.appointmentTime = appointmentTime;
         this.appointmentDuration = appointmentDuration;
         this.physiotherapistId = physiotherapistId;
         this.status = status;
+        this.name = name;
     }
 
-    public Appointment() {}
+
+    public Treatment() {}
+
+    public Long getId() { return id; }
+
+    public void setId(Long id) { this.id = id; }
 
     public LocalTime getAppointmentTime() {
         return appointmentTime;
@@ -38,36 +46,20 @@ public class Appointment {
         return appointmentDuration;
     }
 
-    public LocalDateTime getBookingDate() {
-        return bookingDate;
-    }
-
     public Long getPhysiotherapistId() {
         return physiotherapistId;
     }
 
-    public Long getPatientId() {
-        return patientId;
-    }
-
-    public String getTreatment() {
-        return treatment;
+    public String getName() {
+        return name;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public void setPatientId(Long patientId) {
-        this.patientId = patientId;
-    }
-
-    public void setTreatment(String treatment) {
-        this.treatment = treatment;
-    }
-
-    public void setBookingDate(LocalDateTime bookingDate) {
-        this.bookingDate = bookingDate;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setStatus(String status) {
@@ -76,5 +68,9 @@ public class Appointment {
 
     public void setAppointmentDuration(Long appointmentDuration) {
         this.appointmentDuration = appointmentDuration;
+    }
+
+    public static Long generateAppointmentID() {
+        return appointmentCounter.incrementAndGet();
     }
 }
