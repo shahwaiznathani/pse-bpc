@@ -10,19 +10,19 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 public class Booking {
-    private Long id;
+    private String id;
     private LocalDate bookingDate;
     private LocalTime bookingTime;
     private Long bookingDuration;
     private Long physiotherapistId;
     private Long patientId;
     private String treatmentName;
-    private Long treatmentId;
+    private String treatmentId;
     private String status;
-    private static final AtomicLong bookingCounter = new AtomicLong(3000000);
-
-    public Booking(LocalDate bookingDate, LocalTime bookingTime, Long bookingDuration, Long physiotherapistId, Long patientId, String status, String treatmentName, Long treatmentId) {
-        this.id = bookingCounter.incrementAndGet();
+    private static final AtomicLong bookingCounter = new AtomicLong(0);
+    //May need getter and setter for Treatment ID and Name
+    public Booking(LocalDate bookingDate, LocalTime bookingTime, Long bookingDuration, Long physiotherapistId, Long patientId, String status, String treatmentName, String treatmentId) {
+        this.id = "B-" + bookingCounter.incrementAndGet();
         this.bookingDate = bookingDate;
         this.bookingTime = bookingTime;
         this.bookingDuration = bookingDuration;
@@ -32,9 +32,10 @@ public class Booking {
         this.treatmentName = treatmentName;
         this.treatmentId = treatmentId;
     }
-    public Long getId() { return id; }
 
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+
+    public void setId(String id) { this.id = id; }
 
     public LocalTime getBookingTime() {
         return bookingTime;
@@ -58,6 +59,14 @@ public class Booking {
 
     public String getTreatmentName() {
         return treatmentName;
+    }
+
+    public void setTreatmentId(String treatmentId) {
+        this.treatmentId = treatmentId;
+    }
+
+    public String getTreatmentId() {
+        return treatmentId;
     }
 
     public String getStatus() {

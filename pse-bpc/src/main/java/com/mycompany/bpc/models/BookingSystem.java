@@ -2,6 +2,7 @@ package com.mycompany.bpc.models;
 
 import com.mycompany.bpc.helper.DataHelper;
 
+import java.awt.print.Book;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.time.*;
@@ -31,10 +32,10 @@ public class BookingSystem {
         patients.addAll(patientsList);
     }
 
-    public Optional<Patient> getPatientById(Long patientId) {
+    public Patient getPatientById(Long patientId) {
         return patients.stream()
                 .filter(p -> p.getId().equals(patientId))
-                .findFirst();
+                .findFirst().orElse(null);
     }
 
     public List<Patient> getAllPatients() {
@@ -58,10 +59,10 @@ public class BookingSystem {
         physiotherapists.addAll(physiotherapistsList);
     }
 
-    public Optional<Physiotherapist> getPhysiotherapistById(Long physiotherapistId) {
+    public Physiotherapist getPhysiotherapistById(Long physiotherapistId) {
         return physiotherapists.stream()
                 .filter(p -> p.getId().equals(physiotherapistId))
-                .findFirst();
+                .findFirst().orElse(null);
     }
 
     public List<Physiotherapist> getAllPhysiotherapists() {
@@ -76,6 +77,16 @@ public class BookingSystem {
 
 
     //Treatment Functions
+    public void updateTreatmentStatus(Treatment treatment, String status) {
+        treatment.setStatus(status);
+    }
+
+    public void updateTreatmentStatusById(String treatmentId){
+        treatments.stream()
+                .filter(b -> b.getId().equalsIgnoreCase(treatmentId))
+                .findFirst().ifPresent(treatment -> treatment.setStatus("confirmed"));
+    }
+
     public void bulkAddTreatments(List<Treatment> treatementsList) {
         treatments.addAll(treatementsList);
     }
@@ -103,19 +114,20 @@ public class BookingSystem {
 
     public void printCustomTreatments(List<Treatment> customTreatments) {
         System.out.println("\n*** Treatment Available ***\n");
-        System.out.printf("%-5s | %-20s | %-30s | %-15s | %-15s\n",
-                "S.No", "Physiotherapist", "Treatment", "Date", "Time");
+        System.out.printf("%-5s | %-10s | %-20s | %-30s | %-15s | %-15s\n",
+                "S.No", "Treatment Id", "Physiotherapist", "Treatment", "Date", "Time");
         System.out.println("---------------------------------------------------------------------------------------------------------");
         int counter = 0;
-        for (Treatment appointment : customTreatments) {
+        for (Treatment treatment : customTreatments) {
             counter++;
-            Physiotherapist physiotherapist = getPhysiotherapistById(appointment.getPhysiotherapistId()).get();
-            String appointmentDuration = DataHelper.getDurationAsString(appointment.getAppointmentTime(), appointment.getAppointmentDuration());
-            System.out.printf("%-5s | %-20s | %-30s | %-15s | %-15s\n",
+            Physiotherapist physiotherapist = getPhysiotherapistById(treatment.getPhysiotherapistId());
+            String appointmentDuration = DataHelper.getDurationAsString(treatment.getAppointmentTime(), treatment.getAppointmentDuration());
+            System.out.printf("%-5s |%-10s | %-20s | %-30s | %-15s | %-15s\n",
                     counter,
+                    treatment.getId(),
                     physiotherapist.getFullName(),
-                    appointment.getName(),
-                    appointment.getAppointmentDate(),
+                    treatment.getName(),
+                    treatment.getAppointmentDate(),
                     appointmentDuration);
         }
         System.out.println("---------------------------------------------------------------------------------------------------------");
@@ -123,20 +135,10 @@ public class BookingSystem {
 
 
     //Booking Functions
-    public void addBooking(Booking booking) {
-        bookings.add(booking);
-    }
-
-    public void cancelBooking(Booking booking) {
-        booking.setStatus("Cancelled");
-    }
-
-    public void attendBooking(Booking booking) {
-        booking.setStatus("Attended");
-    }
-
-    public void updateTreatmentStatus(Treatment treatment, String status) {
-        treatment.setStatus(status);
+    public Booking getBookingById(String bookingId) {
+        return bookings.stream()
+                .filter(b -> b.getId().equalsIgnoreCase(bookingId))
+                .findFirst().orElse(null);
     }
 
     public List<Booking> getBookingsByPatientId(Long patientId) {
@@ -159,9 +161,36 @@ public class BookingSystem {
         return result;
     }
 
-    public void printBookingDetails(int SNo, Booking booking) {
-        Patient patient = getPatientById(booking.getPatientId()).get();
-        Physiotherapist physiotherapist = getPhysiotherapistById(booking.getPhysiotherapistId()).get();
+    public void addBooking(Booking booking) {
+        bookings.add(booking);
+    }
+
+    public void cancelBooking(Booking booking) {
+        booking.setStatus("Cancelled");
+        String treatmentId = booking.getTreatmentId();
+        updateTreatmentStatusById(treatmentId);
+        booking.setTreatmentId(null);
+    }
+
+    public void attendBooking(Booking booking) {
+        booking.setStatus("Attended");
+    }
+
+    public boolean validateBookingTime(LocalDate bookingDate, LocalTime bookingTime, Long patientId) {
+        List <Booking> patientBookings = getBookingsByPatientId(patientId);
+        if(!patientBookings.isEmpty()){
+            for (Booking booking : patientBookings) {
+                if (booking.getBookingDate().equals(bookingDate) && booking.getBookingTime().equals(bookingTime)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public void printBookingDetails(Booking booking) {
+        Patient patient = getPatientById(booking.getPatientId());
+        Physiotherapist physiotherapist = getPhysiotherapistById(booking.getPhysiotherapistId());
         String statusIcon = getStatusIcon(booking.getStatus());
         String bookingDuration = DataHelper.getDurationAsString(booking.getBookingTime(), booking.getBookingDuration());
         System.out.printf("%-10s | %-15s | %-20s | %-20s | %-15s | %-15s | %s\n",
@@ -177,10 +206,8 @@ public class BookingSystem {
     public void printAllBookings() {
         System.out.println("\n*** ALL Bookings ***\n");
         printHeader();
-        int counter = 0;
         for (Booking booking : bookings) {
-            counter++;
-            printBookingDetails(counter, booking);
+            printBookingDetails(booking);
         }
         System.out.println("------------------------------------------------------\n");
     }
@@ -193,10 +220,8 @@ public class BookingSystem {
         else{
             System.out.println("\n*** BOOKING ***\n");
             printHeader();
-            int counter = 0;
             for (Booking booking : filteredBookings) {
-                counter++;
-                printBookingDetails(counter, booking);
+                printBookingDetails(booking);
             }
             System.out.println("---------------------------------------------------------------------------------------------------------");
         }
@@ -210,10 +235,8 @@ public class BookingSystem {
         else{
             System.out.println("\n*** BOOKING ***\n");
             printHeader();
-            int counter = 0;
             for (Booking booking : filteredBookings) {
-                counter++;
-                printBookingDetails(counter, booking);
+                printBookingDetails(booking);
             }
             System.out.println("---------------------------------------------------------------------------------------------------------");
         }

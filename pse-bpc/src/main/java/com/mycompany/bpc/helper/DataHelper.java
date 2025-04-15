@@ -160,4 +160,36 @@ public class DataHelper {
     public static String getDurationAsString(LocalTime time, long duration) {
         return time.toString() + " - " + time.plusMinutes(duration).toString();
     }
+
+    public static String getValidBookingId(Scanner scanner, String prompt) {
+        String bookingId = "";
+        while (true) {
+            System.out.print(prompt);
+            bookingId = scanner.nextLine().trim();
+
+            // Validate using regex: B- followed by one or more digits
+            if (bookingId.matches("B-[1-9]\\d*")) {
+                break;
+            } else {
+                System.out.println("Invalid Booking ID. Format must be: B-{PositiveNumber} (e.g., B-123)");
+            }
+        }
+        return bookingId;
+    }
+
+    public static boolean getYesOrNo(Scanner scanner, String prompt) {
+        String input = "";
+        while (true) {
+            System.out.print(prompt + " (Y/N): ");
+            input = scanner.nextLine().trim().toUpperCase();
+
+            if (input.equals("Y")) {
+                return true;
+            } else if (input.equals("N")) {
+                return false;
+            } else {
+                System.out.println("Invalid input. Please enter 'Y' for yes or 'N' for no.");
+            }
+        }
+    }
 }
