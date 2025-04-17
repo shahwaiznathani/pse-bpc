@@ -9,21 +9,28 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 public class DataHelper {
-    private static final String PATIENTS_FILE = "/Users/shahwaizshaban/Desktop/resources/patients.txt";
-    private static final String PHYSIOTHERAPISTS_FILE = "/Users/shahwaizshaban/Desktop/resources/physiotherapists.txt";
-    private static final String APPOINTMENTS_FILE = "/Users/shahwaizshaban/Desktop/resources/appointments.txt";
+    private static final String PATIENTS_FILE = "data/patients.txt";
+    private static final String PHYSIOTHERAPISTS_FILE = "data/physiotherapists.txt";
+    private static final String APPOINTMENTS_FILE = "data/appointments.txt";
 
     public static List<Patient> loadPatients() {
         List<Patient> patients = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(PATIENTS_FILE))) {
+        try (InputStream inputStream = DataHelper.class.getClassLoader().getResourceAsStream(PATIENTS_FILE)) {
+            if (inputStream == null) {
+                System.out.println("File not found: " + PATIENTS_FILE);
+                return patients;
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] data = line.split(",");
                 patients.add(new Patient(Long.valueOf(data[0]), data[1], data[2], data[3]));
             }
+
         }
         catch (IOException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error reading file: " + e.getMessage());
         }
         return patients;
     }
@@ -31,75 +38,70 @@ public class DataHelper {
     public static List<Physiotherapist> loadPhysiotherapists() {
         List<Physiotherapist> physiotherapists = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(PHYSIOTHERAPISTS_FILE))) {
-            String line;
+        try (InputStream inputStream = DataHelper.class.getClassLoader().getResourceAsStream(PHYSIOTHERAPISTS_FILE)) {
+            assert inputStream != null;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
 
-            while ((line = reader.readLine()) != null) {
-                // Split the line into its parts: ID, name, address, phone, password, expertise with treatments
-                String[] data = line.split(",");
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String[] data = line.split(",");
 
-                if (data.length < 5) continue;  // Skip invalid lines (e.g., less than 6 parts)
+                        if (data.length < 5) continue;
 
-                // Read basic details
-                Long id = Long.valueOf(data[0].trim());
-                String fullName = data[1].trim();
-                String address = data[2].trim();
-                String phoneNumber = data[3].trim();
+                        Long id = Long.valueOf(data[0].trim());
+                        String fullName = data[1].trim();
+                        String address = data[2].trim();
+                        String phoneNumber = data[3].trim();
+                        String expertiseString = data[4].trim();
 
-                // Extract the expertise list, which is the last element in the data array
-                String expertiseString = data[4].trim();
+                        String[] expertiseArray = expertiseString.split("\\|");
+                        List<String> expertiseList = new ArrayList<>();
+                        for (String expertise : expertiseArray) {
+                            expertiseList.add(expertise.trim());
+                        }
 
-                // Split the expertise by the '|' character and add to the list
-                String[] expertiseArray = expertiseString.split("\\|");
-                List<String> expertiseList = new ArrayList<>();
-
-                // Add each expertise into the list (trim any whitespace)
-                for (String expertise : expertiseArray) {
-                    expertiseList.add(expertise.trim());
-                }
-
-                // Create and add a new Physiotherapist to the list
-                Physiotherapist physiotherapist = new Physiotherapist(id, fullName, address, phoneNumber, expertiseList);
-                physiotherapists.add(physiotherapist);
+                        Physiotherapist physiotherapist = new Physiotherapist(id, fullName, address, phoneNumber, expertiseList);
+                        physiotherapists.add(physiotherapist);
+                    }
             }
         }
-        catch (IOException e) {
-            System.out.println(e.getMessage());
+        catch (IOException | NullPointerException e) {
+            System.out.println("Error loading physiotherapists: " + e.getMessage());
         }
 
         return physiotherapists;
     }
 
     public static List<Treatment> loadTreatments() {
-        List<Treatment> appointments = new ArrayList<>();
+        List<Treatment> treatments = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(APPOINTMENTS_FILE))) {
-            String line;
+        try (InputStream inputStream = DataHelper.class.getClassLoader().getResourceAsStream(APPOINTMENTS_FILE)) {
+            assert inputStream != null;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
 
-            while ((line = reader.readLine()) != null) {
-                // Split the line into its parts: appointmentDate, appointmentTime, physiotherapistId, patientId, status
-                String[] data = line.split(",");
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] data = line.split(",");
 
-                if (data.length < 7) continue;  // Skip invalid lines
+                    if (data.length < 7) continue;
 
-                // Read details and trim whitespace
-                LocalDate appointmentDate = LocalDate.parse(data[0].trim());
-                LocalTime appointmentTime = LocalTime.parse(data[1].trim());
-                Long appointmentDuration = Long.valueOf(data[2].trim());
-                Long physiotherapistId = Long.valueOf(data[3].trim());
-                String status = data[4].trim();
-                String treatmentName = data[5].trim();
-                String expertise = data[6].trim();
+                    LocalDate appointmentDate = LocalDate.parse(data[0].trim());
+                    LocalTime appointmentTime = LocalTime.parse(data[1].trim());
+                    Long appointmentDuration = Long.valueOf(data[2].trim());
+                    Long physiotherapistId = Long.valueOf(data[3].trim());
+                    String status = data[4].trim();
+                    String treatmentName = data[5].trim();
+                    String expertise = data[6].trim();
 
-                // Create and add an Appointment object
-                appointments.add(new Treatment(appointmentDate, appointmentTime, appointmentDuration, physiotherapistId, status, treatmentName, expertise));
+                    treatments.add(new Treatment(appointmentDate, appointmentTime, appointmentDuration, physiotherapistId, status, treatmentName, expertise));
+                }
             }
         }
-        catch (IOException e) {
-            System.out.println(e.getMessage());
+        catch (IOException | NullPointerException e) {
+            System.out.println("Error loading treatments: " + e.getMessage());
         }
 
-        return appointments;
+        return treatments;
     }
 
     public static int getValidNumberInput(Scanner scanner, int min, int max, String prompt) {

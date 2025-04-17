@@ -31,8 +31,6 @@ public class Treatment {
 
     public String getId() { return id; }
 
-    public void setId(String id) { this.id = id; }
-
     public LocalTime getAppointmentTime() {
         return appointmentTime;
     }
@@ -56,6 +54,7 @@ public class Treatment {
     public String getStatus() {
         return status;
     }
+
     public String getExpertise() {
         return expertise;
     }

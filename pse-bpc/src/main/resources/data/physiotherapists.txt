@@ -1,0 +1,3 @@
+1000001, Dr. Sarmad Khadim, 123 Health St., 515-1234, Physiotherapy|Osteopathy|Sports
+1000002, Dr. Nathan Brown, 456 Care Ave., 525-5678, Rehabilitation|Musculoskeletal
+1000003, Dr. Emily Smith, 678 Health St., 535-1234, Neurological|Sports

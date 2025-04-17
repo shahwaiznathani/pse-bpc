@@ -20,7 +20,7 @@ public class Booking {
     private String treatmentId;
     private String status;
     private static final AtomicLong bookingCounter = new AtomicLong(0);
-    //May need getter and setter for Treatment ID and Name
+
     public Booking(LocalDate bookingDate, LocalTime bookingTime, Long bookingDuration, Long physiotherapistId, Long patientId, String status, String treatmentName, String treatmentId) {
         this.id = "B-" + bookingCounter.incrementAndGet();
         this.bookingDate = bookingDate;
@@ -34,8 +34,6 @@ public class Booking {
     }
 
     public String getId() { return id; }
-
-    public void setId(String id) { this.id = id; }
 
     public LocalTime getBookingTime() {
         return bookingTime;
