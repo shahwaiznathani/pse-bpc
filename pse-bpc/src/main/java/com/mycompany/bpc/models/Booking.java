@@ -61,10 +61,6 @@ public class Booking {
         return treatmentName;
     }
 
-    public void setTreatmentId(String treatmentId) {
-        this.treatmentId = treatmentId;
-    }
-
     public String getTreatmentId() {
         return treatmentId;
     }
@@ -75,5 +71,29 @@ public class Booking {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setBookingTime(LocalTime bookingTime) {
+        this.bookingTime = bookingTime;
+    }
+
+    public void setBookingDate(LocalDate bookingDate) {
+        this.bookingDate = bookingDate;
+    }
+
+    public void setPhysiotherapistId(Long physiotherapistId) {
+        this.physiotherapistId = physiotherapistId;
+    }
+
+    public void setBookingDuration(Long bookingDuration) {
+        this.bookingDuration = bookingDuration;
+    }
+
+    public void setTreatmentId(String treatmentId) {
+        this.treatmentId = treatmentId;
+    }
+
+    public void setTreatmentName(String treatmentName) {
+        this.treatmentName = treatmentName;
     }
 }

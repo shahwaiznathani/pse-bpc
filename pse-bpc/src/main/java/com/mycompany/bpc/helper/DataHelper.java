@@ -80,7 +80,7 @@ public class DataHelper {
                 // Split the line into its parts: appointmentDate, appointmentTime, physiotherapistId, patientId, status
                 String[] data = line.split(",");
 
-                if (data.length < 6) continue;  // Skip invalid lines
+                if (data.length < 7) continue;  // Skip invalid lines
 
                 // Read details and trim whitespace
                 LocalDate appointmentDate = LocalDate.parse(data[0].trim());
@@ -89,9 +89,10 @@ public class DataHelper {
                 Long physiotherapistId = Long.valueOf(data[3].trim());
                 String status = data[4].trim();
                 String treatmentName = data[5].trim();
+                String expertise = data[6].trim();
 
                 // Create and add an Appointment object
-                appointments.add(new Treatment(appointmentDate, appointmentTime, appointmentDuration, physiotherapistId, status, treatmentName));
+                appointments.add(new Treatment(appointmentDate, appointmentTime, appointmentDuration, physiotherapistId, status, treatmentName, expertise));
             }
         }
         catch (IOException e) {

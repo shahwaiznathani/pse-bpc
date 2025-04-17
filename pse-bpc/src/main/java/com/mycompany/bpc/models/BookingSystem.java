@@ -15,6 +15,7 @@ public class BookingSystem {
     private List<Patient> patients;
     private List<Treatment> treatments;
     private List<Booking> bookings;
+    public static Scanner scanner = new Scanner(System.in);
 
     public BookingSystem() {
         this.physiotherapists = new ArrayList<>();
@@ -180,7 +181,7 @@ public class BookingSystem {
         List <Booking> patientBookings = getBookingsByPatientId(patientId);
         if(!patientBookings.isEmpty()){
             for (Booking booking : patientBookings) {
-                if (booking.getBookingDate().equals(bookingDate) && booking.getBookingTime().equals(bookingTime)) {
+                if (booking.getBookingDate().equals(bookingDate) && booking.getBookingTime().equals(bookingTime) && booking.getStatus().equalsIgnoreCase("booked")) {
                     return false;
                 }
             }
@@ -256,5 +257,190 @@ public class BookingSystem {
             case "booked" -> "⏳ Booked";
             default -> status;
         };
+    }
+
+    public void bookByPhysiotherapist(Long patientId, String bookingId) {
+        Physiotherapist selectedPhysio = selectPhysiotherapistByName();
+        Treatment selectedTreatment = selectTreatment(selectedPhysio);
+        boolean isBookingValid = validateBookingTime(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
+        if(isBookingValid){
+            if(bookingId != null){
+                Booking booking = getBookingById(bookingId);
+
+                booking.setTreatmentId(selectedTreatment.getId());
+                booking.setTreatmentName(selectedTreatment.getName());
+                booking.setBookingDate(selectedTreatment.getAppointmentDate());
+                booking.setBookingTime(selectedTreatment.getAppointmentTime());
+                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
+                booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
+                booking.setStatus("Booked");
+
+                updateTreatmentStatus(selectedTreatment, "Booked");
+                System.out.println("Booking " + bookingId + " Updated.");
+            }
+            else{
+                Booking newBooking = new Booking(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(),
+                        selectedTreatment.getAppointmentDuration(), selectedTreatment.getPhysiotherapistId(), patientId,
+                        "Booked", selectedTreatment.getName(), selectedTreatment.getId());
+
+                addBooking(newBooking);
+                updateTreatmentStatus(selectedTreatment, "Booked");
+                System.out.println("Booking confirmed with Id: " + newBooking.getId());
+            }
+        }
+        else{
+            System.out.println("Cannot book more than one booking at the same time");
+        }
+    }
+
+    public void bookByAreaOfExpertise(Long patientId, String bookingId){
+        String selectedExpertise = selectExpertise();
+        List<Physiotherapist> availablePhysios = searchPhysiotherapistByExpertise(selectedExpertise);
+        Treatment selectedTreatment = selectTreatmentByExpertise(availablePhysios, selectedExpertise); //Need to pass expertise here
+        boolean isBookingValid = validateBookingTime(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
+        if(isBookingValid){
+            if(bookingId != null){
+                Booking booking = getBookingById(bookingId);
+
+                booking.setTreatmentId(selectedTreatment.getId());
+                booking.setTreatmentName(selectedTreatment.getName());
+                booking.setBookingDate(selectedTreatment.getAppointmentDate());
+                booking.setBookingTime(selectedTreatment.getAppointmentTime());
+                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
+                booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
+                booking.setStatus("Booked");
+
+                updateTreatmentStatus(selectedTreatment, "Booked");
+                System.out.println("Booking " + bookingId + " Updated.");
+            }
+            else{
+                Booking newBooking = new Booking(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(),
+                        selectedTreatment.getAppointmentDuration(), selectedTreatment.getPhysiotherapistId(), patientId,
+                        "Booked", selectedTreatment.getName(), selectedTreatment.getId());
+                addBooking(newBooking);
+                updateTreatmentStatus(selectedTreatment, "Booked");
+                System.out.println("Booking confirmed with Id: " + newBooking.getId());
+            }
+        }
+        else{
+            System.out.println("Cannot book more than one booking at the same time");
+        }
+    }
+
+    public Physiotherapist selectPhysiotherapistByName(){
+        Physiotherapist selectedPhysio;
+        while (true) {
+            String input = DataHelper.getStringInput(scanner, "Search Physiotherapist by name (e.g., Dr Shahwaiz): ");
+            List<Physiotherapist> lst = searchPhysiotherapist(input);
+
+            if (lst.isEmpty()) {
+                System.out.println("No physiotherapist found. Please try again.");
+            }
+            else {
+                // Print physiotherapists
+                for (int i = 0; i < lst.size(); i++) {
+                    System.out.println((i + 1) + ". " + lst.get(i).getFullName());
+                }
+                int choice = DataHelper.getValidNumberInput(scanner, 1, lst.size(), "Enter your choice (1-" + lst.size() + "): ");
+
+                selectedPhysio = lst.get(choice - 1);
+                System.out.println("You selected: " + selectedPhysio.getFullName());
+                break;
+            }
+        }
+        return selectedPhysio;
+    }
+
+    public String selectExpertise(){
+        Map<String, Set<Physiotherapist>> expertiseToPhysios = getAllExpertiseByPhysiotherapist();
+        List<String> expertiseLst = new ArrayList<>(expertiseToPhysios.keySet());
+        String selectedExpertise;
+        while(true){
+            String searchQuery = DataHelper.getStringInput(scanner, "Search for a Expertise:");
+            List<String> matchingExpertise = expertiseLst.stream()
+                    .filter(t -> t.toLowerCase().contains(searchQuery))
+                    .toList();
+
+            if (matchingExpertise.isEmpty()) {
+                System.out.println("No matching Expertise found. Please try again.");
+            }
+            else{
+                System.out.println("Matching Expertise:");
+                for (int i = 0; i < matchingExpertise.size(); i++) {
+                    System.out.println((i + 1) + ". " + matchingExpertise.get(i));
+                }
+
+                // Get user selection
+                int expertiseChoice = DataHelper.getValidNumberInput(scanner, 1, matchingExpertise.size(), "Enter your choice (1-" + matchingExpertise.size() + "): ");
+                selectedExpertise = matchingExpertise.get(expertiseChoice - 1);
+                break;
+            }
+        }
+        return selectedExpertise;
+    }
+
+    public Treatment selectTreatment(Physiotherapist physiotherapist){
+        Treatment selectedTreatment;
+        while (true){
+            LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter appointment date (YYYY-MM-DD): ");
+
+            List<Treatment> availTreatments = filterTreatmentsByDate(appointmentDate, physiotherapist.getId());
+
+            if (availTreatments.isEmpty()) {
+                System.out.println("No appointments available for " + physiotherapist.getFullName() + " on " + appointmentDate.toString() + ". Try another Date.");
+            }
+            else{
+                //Print Available Appointments
+                printCustomTreatments(availTreatments);
+                int slotChoice = DataHelper.getValidNumberInput(scanner, 1, availTreatments.size(), "Enter Slot number to book: ");
+                selectedTreatment = availTreatments.get(slotChoice - 1);
+                break;
+            }
+        }
+        return selectedTreatment;
+    }
+
+    public Treatment selectTreatmentByExpertise(List<Physiotherapist> availablePhysios, String expertise){
+        Treatment selectedTreatment;
+        while (true){
+            LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter treatment date (YYYY-MM-DD): ");
+
+            List<Treatment> availTreatments = filterTreatmentsByDateAndPhysiotherapists(appointmentDate, availablePhysios);
+            if (availTreatments.isEmpty()) {
+                System.out.println("No treatments available on " + appointmentDate.toString() + ". Try another Date.");
+            }
+            else {
+                List<Treatment> filteredTreatments = availTreatments.stream()
+                        .filter(appointment -> appointment.getExpertise().equalsIgnoreCase(expertise))
+                        .toList();
+                if(filteredTreatments.isEmpty()){
+                    System.out.println("No treatments available for the selected Expertise on " + appointmentDate.toString() + ". Try another Date.");
+                }
+                else{
+                    printCustomTreatments(filteredTreatments);
+                    int treatmentChoice = DataHelper.getValidNumberInput(scanner, 1, filteredTreatments.size(), "Enter Slot number to book: ");
+                    selectedTreatment = filteredTreatments.get(treatmentChoice - 1);
+                    break;
+                }
+            }
+        }
+        return selectedTreatment;
+    }
+
+    public Map<String, Set<Physiotherapist>> getAllExpertiseByPhysiotherapist(){
+        Map<String, Set<Physiotherapist>> expertiseToPhysios = new HashMap<>();
+
+        // Gather all unique treatments and map them to physiotherapists
+        for (Physiotherapist physio : physiotherapists) {
+            for (String expertise : physio.getAllExpertise()) {
+                expertiseToPhysios.computeIfAbsent(expertise, k -> new HashSet<>()).add(physio);
+            }
+        }
+        return expertiseToPhysios;
+    }
+
+    public List<Physiotherapist> searchPhysiotherapistByExpertise(String selectedExpertise){
+        Map<String, Set<Physiotherapist>> expertiseToPhysios = getAllExpertiseByPhysiotherapist();
+        return new ArrayList<>(expertiseToPhysios.get(selectedExpertise));
     }
 }

@@ -13,11 +13,12 @@ public class Treatment {
     private LocalTime appointmentTime;
     private Long appointmentDuration;
     private Long physiotherapistId;
+    private String expertise;
     private String name;
     private String status;
     private static final AtomicLong appointmentCounter = new AtomicLong(0);
 
-    public Treatment(LocalDate appointmentDate, LocalTime appointmentTime, Long appointmentDuration, Long physiotherapistId, String status, String name) {
+    public Treatment(LocalDate appointmentDate, LocalTime appointmentTime, Long appointmentDuration, Long physiotherapistId, String status, String name, String expertise) {
         this.id = "T-" + appointmentCounter.incrementAndGet();
         this.appointmentDate = appointmentDate;
         this.appointmentTime = appointmentTime;
@@ -25,6 +26,7 @@ public class Treatment {
         this.physiotherapistId = physiotherapistId;
         this.status = status;
         this.name = name;
+        this.expertise = expertise;
     }
 
     public String getId() { return id; }
@@ -53,6 +55,9 @@ public class Treatment {
 
     public String getStatus() {
         return status;
+    }
+    public String getExpertise() {
+        return expertise;
     }
 
     public void setStatus(String status) {
