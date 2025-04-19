@@ -3,6 +3,7 @@ package com.mycompany.bpc;
 import com.mycompany.bpc.helper.DataHelper;
 import com.mycompany.bpc.models.*;
 
+import java.time.LocalDate;
 import java.util.*;
 /**
  *
@@ -41,10 +42,11 @@ public class PseBpc {
         System.out.println("5. Add a Patient");
         System.out.println("6. Delete a Patient");
         System.out.println("7. Attend an Appointment");
-        System.out.println("8. Exit Program");
+        System.out.println("8. View Clinic Report");
+        System.out.println("9. Exit Program");
         System.out.println("===============================");
 
-        int choice = DataHelper.getValidNumberInput(scanner, 1, 8, "Enter your choice (1-" + 8 + "): ");
+        int choice = DataHelper.getValidNumberInput(scanner, 1, 89, "Enter your choice (1-" + 9 + "): ");
 
         switch (choice) {
             case 1:
@@ -69,6 +71,9 @@ public class PseBpc {
                 attendBooking();
                 break;
             case 8:
+                viewReport();
+                break;
+            case 9:
                 System.exit(0);
                 break;
             default:
@@ -205,7 +210,7 @@ public class PseBpc {
         }
         else{
             bpc.printHeader();
-            bpc.printBookingDetails(booking);;
+            bpc.printBookingDetails(booking);
             if(booking.getStatus().equalsIgnoreCase("cancelled") ||
                 booking.getStatus().equalsIgnoreCase("attended") ){
                 System.out.println("\nCannot ATTEND a booking that has already been marked Cancelled/Attended");
@@ -217,8 +222,8 @@ public class PseBpc {
                     System.out.println("\nYou have successfully Attended a booking with id " + booking.getId() + ".");
                 }
             }
-            showDashboard();
         }
+        showDashboard();
     }
 
     private static void addPatient(){
@@ -236,6 +241,12 @@ public class PseBpc {
         Long patientId = DataHelper.getValidId(scanner, 2000000, 9000000, "Enter Patient ID for account deletion: ");
         bpc.removePatient(patientId);
         System.out.println( "Patient with Id " + patientId + " has been deleted.");
+        showDashboard();
+    }
+
+    private static void viewReport(){
+        LocalDate reportMonth = DataHelper.getValidMonthYear(scanner, "Enter Month for Report (YYYY-MM): ");
+        bpc.generateBookingReport(reportMonth);
         showDashboard();
     }
 }

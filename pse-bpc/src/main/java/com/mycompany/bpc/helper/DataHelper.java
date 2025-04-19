@@ -154,6 +154,21 @@ public class DataHelper {
         return date;
     }
 
+    public static LocalDate getValidMonthYear(Scanner scanner, String prompt) {
+        LocalDate date = null;
+        while (date == null) {
+            System.out.print(prompt);
+            String input = scanner.nextLine();
+            try {
+                // Parse only year and month, assume day = 1
+                date = LocalDate.parse(input + "-01", DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid format. Please use YYYY-MM.");
+            }
+        }
+        return date;
+    }
+
     public static String getStringInput(Scanner scanner, String prompt){
         System.out.println(prompt);
         String inputString = scanner.nextLine();
@@ -181,10 +196,9 @@ public class DataHelper {
     }
 
     public static boolean getYesOrNo(Scanner scanner, String prompt) {
-        String input = "";
         while (true) {
             System.out.print(prompt + " (Y/N): ");
-            input = scanner.nextLine().trim().toUpperCase();
+            String input = scanner.nextLine().trim().toUpperCase();
 
             if (input.equals("Y")) {
                 return true;

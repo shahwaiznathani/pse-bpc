@@ -38,10 +38,6 @@ public class BookingSystem {
                 .findFirst().orElse(null);
     }
 
-    public List<Patient> getAllPatients() {
-        return patients;
-    }
-
     public void removePatient(Long patientId) {
         patients.removeIf(obj -> Objects.equals(obj.getId(), patientId));
     }
@@ -63,10 +59,6 @@ public class BookingSystem {
         return physiotherapists.stream()
                 .filter(p -> p.getId().equals(physiotherapistId))
                 .findFirst().orElse(null);
-    }
-
-    public List<Physiotherapist> getAllPhysiotherapists() {
-        return physiotherapists;
     }
 
     public List<Physiotherapist> searchPhysiotherapist(String name) {
@@ -114,7 +106,7 @@ public class BookingSystem {
 
     public void printCustomTreatments(List<Treatment> customTreatments) {
         System.out.println("\n*** Treatment Available ***\n");
-        System.out.printf("%-5s | %-10s | %-20s | %-30s | %-15s | %-15s\n",
+        System.out.printf("%-5s | %-10s | %-20s | %-35s | %-15s | %-15s\n",
                 "S.No", "Treatment Id", "Physiotherapist", "Treatment", "Date", "Time");
         System.out.println("---------------------------------------------------------------------------------------------------------");
         int counter = 0;
@@ -122,7 +114,7 @@ public class BookingSystem {
             counter++;
             Physiotherapist physiotherapist = getPhysiotherapistById(treatment.getPhysiotherapistId());
             String appointmentDuration = DataHelper.getDurationAsString(treatment.getAppointmentTime(), treatment.getAppointmentDuration());
-            System.out.printf("%-5s |%-10s | %-20s | %-30s | %-15s | %-15s\n",
+            System.out.printf("%-5s |%-10s | %-20s | %-35s | %-15s | %-15s\n",
                     counter,
                     treatment.getId(),
                     physiotherapist.getFullName(),
@@ -193,7 +185,7 @@ public class BookingSystem {
         Physiotherapist physiotherapist = getPhysiotherapistById(booking.getPhysiotherapistId());
         String statusIcon = getStatusIcon(booking.getStatus());
         String bookingDuration = DataHelper.getDurationAsString(booking.getBookingTime(), booking.getBookingDuration());
-        System.out.printf("%-10s | %-15s | %-20s | %-20s | %-15s | %-15s | %s\n",
+        System.out.printf("%-10s | %-15s | %-20s | %-35s | %-15s | %-15s | %s\n",
                 booking.getId(),
                 patient.getFullName(),
                 physiotherapist.getFullName(),
@@ -201,15 +193,6 @@ public class BookingSystem {
                 booking.getBookingDate(),
                 bookingDuration,
                 statusIcon);
-    }
-
-    public void printAllBookings() {
-        System.out.println("\n*** ALL Bookings ***\n");
-        printHeader();
-        for (Booking booking : bookings) {
-            printBookingDetails(booking);
-        }
-        System.out.println("------------------------------------------------------\n");
     }
 
     public void printBookingsByPhysiotherapist(Long physiotherapistId) {
@@ -243,7 +226,7 @@ public class BookingSystem {
     }
 
     public void printHeader() {
-        System.out.printf("%-10s | %-15s | %-20s | %-20s | %-15s | %-15s | %-10s\n",
+        System.out.printf("%-10s | %-15s | %-20s | %-35s | %-15s | %-15s | %-10s\n",
                 "Booking Id", "Patient", "Physiotherapist", "Treatment", "Date", "Time", "Status");
         System.out.println("---------------------------------------------------------------------------------------------------------");
     }
@@ -441,5 +424,61 @@ public class BookingSystem {
     public List<Physiotherapist> searchPhysiotherapistByExpertise(String selectedExpertise){
         Map<String, Set<Physiotherapist>> expertiseToPhysios = getAllExpertiseByPhysiotherapist();
         return new ArrayList<>(expertiseToPhysios.get(selectedExpertise));
+    }
+
+    public void generateBookingReport(LocalDate reportMonth) {
+        if(!bookings.isEmpty()){
+            List<Booking> filteredBookings = bookings.stream()
+                    .filter(booking -> booking.getBookingDate().getMonthValue() == reportMonth.getMonthValue()
+                            && booking.getBookingDate().getYear() == reportMonth.getYear())
+                    .sorted(
+                            Comparator.comparing(Booking::getBookingDate)
+                                    .thenComparing(Booking::getBookingTime)
+                    )
+                    .toList();
+            if (filteredBookings.isEmpty()) {
+                System.out.println("No bookings found for " + reportMonth.getMonth() + " " + reportMonth.getYear());
+            }
+            else {
+                System.out.println("*** Clinic Report for " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
+                printHeader();
+                for (Booking booking : filteredBookings) {
+                    printBookingDetails(booking);
+                }
+                System.out.println("---------------------------------------------------------------------------------------------------------\n\n\n");
+
+                //Attended booking count for Physios
+                Map<Long, Long> bookingsCountByPhysio = bookings.stream()
+                        .filter(booking -> booking.getBookingDate().getMonthValue() == reportMonth.getMonthValue()
+                                && booking.getBookingDate().getYear() == reportMonth.getYear() && booking.getStatus().equalsIgnoreCase("attended"))
+                        .collect(Collectors.groupingBy(
+                                Booking::getPhysiotherapistId,
+                                Collectors.counting()
+                        ));
+
+                if(!bookingsCountByPhysio.isEmpty()){
+                    System.out.println("*** Bookings Attended By Physiotherapist in " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
+                    System.out.printf("%-20s | %s\n",
+                            "Physiotherapist", "Booking Count");
+                    System.out.println("-------------------------------");
+                    // Sort by count descending before printing
+                    bookingsCountByPhysio.entrySet().stream()
+                            .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
+                            .forEach(entry -> {
+                                Physiotherapist physio = getPhysiotherapistById(entry.getKey());
+                                System.out.printf("%-20s | %s\n",
+                                        physio.getFullName(),
+                                        entry.getValue());
+                            });
+                    System.out.println("-------------------------------");
+                }
+                else{
+                    System.out.println("No attended bookings found for " + reportMonth.getMonth() + " " + reportMonth.getYear() + ".");
+                }
+            }
+        }
+        else{
+            System.out.println("No bookings found. Hence, report cannot be generated.");
+        }
     }
 }
