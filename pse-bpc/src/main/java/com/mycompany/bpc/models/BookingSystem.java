@@ -24,40 +24,33 @@ public class BookingSystem {
     }
 
     public void initializeData() {
-        List<Patient> patientsData = DataHelper.loadPatients();
-        List<Physiotherapist> physiotherapists = DataHelper.loadPhysiotherapists();
-        List<Treatment> treatments = DataHelper.loadTreatments();
-
-        bulkAddPatients(patientsData);
-        bulkAddPhysiotherapists(physiotherapists);
-        bulkAddTreatments(treatments);
+        this.patients = DataHelper.loadPatients();
+        this.physiotherapists = DataHelper.loadPhysiotherapists();
+        this.treatments = DataHelper.loadTreatments();
     }
 
     //Patient Functions
     public List<Patient> getPatients(){
-        return patients;
+        return this.patients;
     }
 
     public Long addPatient(String name, String address, String phoneNumber) {
         Long id = GetNewPatientId();
         Patient newPatient = new Patient(id, name, address, phoneNumber);
-        patients.add(newPatient);
+        this.patients.add(newPatient);
         return id;
     }
 
-    public void bulkAddPatients(List<Patient> patientsList) {
-        patients.addAll(patientsList);
-    }
-
     public Patient getPatientById(Long patientId) {
-        return patients.stream()
+        return this.patients.stream()
                 .filter(p -> p.getId().equals(patientId))
                 .findFirst().orElse(null);
     }
 
     public boolean removePatient(Long patientId) {
         if(getPatientById(patientId)!=null){
-            patients.removeIf(obj -> Objects.equals(obj.getId(), patientId));
+            this.patients.removeIf(obj -> Objects.equals(obj.getId(), patientId));
+            cancelBookingByPatientId(patientId);
             return true;
         }
         else{
@@ -66,7 +59,7 @@ public class BookingSystem {
     }
 
     public Long GetNewPatientId(){
-        return patients.stream()
+        return this.patients.stream()
                 .mapToLong(Patient::getId)
                 .max()
                 .orElse(2000000) + 1;
@@ -74,10 +67,6 @@ public class BookingSystem {
 
 
     //Physiotherapist Functions
-    public void bulkAddPhysiotherapists(List<Physiotherapist> physiotherapistsList) {
-        physiotherapists.addAll(physiotherapistsList);
-    }
-
     public Physiotherapist getPhysiotherapistById(Long physiotherapistId) {
         return physiotherapists.stream()
                 .filter(p -> p.getId().equals(physiotherapistId))
@@ -102,10 +91,6 @@ public class BookingSystem {
                 .findFirst().ifPresent(treatment -> treatment.setStatus("confirmed"));
     }
 
-    public void bulkAddTreatments(List<Treatment> treatementsList) {
-        treatments.addAll(treatementsList);
-    }
-
     public List<Treatment> filterTreatmentsByDate(LocalDate date, Long physiotherapistId) {
         return treatments.stream()
                 .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed") &&
@@ -128,7 +113,7 @@ public class BookingSystem {
     }
 
     public void printCustomTreatments(List<Treatment> customTreatments) {
-        System.out.println("\n*** Treatment Available ***\n");
+        System.out.println("*** Treatment Available ***");
         System.out.printf("%-5s | %-10s | %-20s | %-35s | %-15s | %-15s\n",
                 "S.No", "Treatment Id", "Physiotherapist", "Treatment", "Date", "Time");
         System.out.println("---------------------------------------------------------------------------------------------------------");
@@ -151,14 +136,14 @@ public class BookingSystem {
 
     //Booking Functions
     public Booking getBookingById(String bookingId) {
-        return bookings.stream()
+        return this.bookings.stream()
                 .filter(b -> b.getId().equalsIgnoreCase(bookingId))
                 .findFirst().orElse(null);
     }
 
     public List<Booking> getBookingsByPatientId(Long patientId) {
         List<Booking> result = new ArrayList<>();
-        for (Booking booking : bookings) {
+        for (Booking booking : this.bookings) {
             if (booking.getPatientId() != null && booking.getPatientId().equals(patientId)) {
                 result.add(booking);
             }
@@ -168,7 +153,7 @@ public class BookingSystem {
 
     public List<Booking> getBookingsByPhysiotherapistId(Long physiotherapistId) {
         List<Booking> result = new ArrayList<>();
-        for (Booking booking : bookings) {
+        for (Booking booking : this.bookings) {
             if (booking.getPhysiotherapistId() != null && booking.getPhysiotherapistId().equals(physiotherapistId)) {
                 result.add(booking);
             }
@@ -177,20 +162,20 @@ public class BookingSystem {
     }
 
     public void addBooking(Booking booking) {
-        bookings.add(booking);
+        this.bookings.add(booking);
     }
 
-    public void cancelBooking(Booking booking) {
+    public boolean cancelBooking(Booking booking) {
         if(booking.getStatus().equalsIgnoreCase("cancelled") ||
                 booking.getStatus().equalsIgnoreCase("attended") ){
-            System.out.println("Cannot Cancel/Update a booking that has already been marked Cancelled/Attended");
+            return false;
         }
         else{
             booking.setStatus("Cancelled");
             String treatmentId = booking.getTreatmentId();
             updateTreatmentStatusById(treatmentId);
             booking.setTreatmentId(null);
-            System.out.println("You have successfully cancelled a booking with id " + booking.getId() + ".");
+            return true;
         }
     }
 
@@ -217,66 +202,6 @@ public class BookingSystem {
         return true;
     }
 
-    public void printBookingDetails(Booking booking) {
-        Patient patient = getPatientById(booking.getPatientId());
-        Physiotherapist physiotherapist = getPhysiotherapistById(booking.getPhysiotherapistId());
-        String statusIcon = getStatusIcon(booking.getStatus());
-        String bookingDuration = DataHelper.getDurationAsString(booking.getBookingTime(), booking.getBookingDuration());
-        System.out.printf("%-10s | %-15s | %-20s | %-35s | %-15s | %-15s | %s\n",
-                booking.getId(),
-                patient.getFullName(),
-                physiotherapist.getFullName(),
-                booking.getTreatmentName(),
-                booking.getBookingDate(),
-                bookingDuration,
-                statusIcon);
-    }
-
-    public void printBookingsByPhysiotherapist(Long physiotherapistId) {
-        List<Booking> filteredBookings = getBookingsByPhysiotherapistId(physiotherapistId);
-        if (filteredBookings.isEmpty()) {
-            System.out.println("No bookings found for physiotherapist " + physiotherapistId);
-        }
-        else{
-            System.out.println("\n*** BOOKING ***\n");
-            printHeader();
-            for (Booking booking : filteredBookings) {
-                printBookingDetails(booking);
-            }
-            System.out.println("---------------------------------------------------------------------------------------------------------");
-        }
-    }
-
-    public void printBookingsByPatient(Long patientId) {
-        List<Booking> filteredBookings = getBookingsByPatientId(patientId);
-        if (filteredBookings.isEmpty()) {
-            System.out.println("No bookings found for patient " + patientId);
-        }
-        else{
-            System.out.println("\n*** BOOKING ***\n");
-            printHeader();
-            for (Booking booking : filteredBookings) {
-                printBookingDetails(booking);
-            }
-            System.out.println("---------------------------------------------------------------------------------------------------------");
-        }
-    }
-
-    public void printHeader() {
-        System.out.printf("%-10s | %-15s | %-20s | %-35s | %-15s | %-15s | %-10s\n",
-                "Booking Id", "Patient", "Physiotherapist", "Treatment", "Date", "Time", "Status");
-        System.out.println("---------------------------------------------------------------------------------------------------------");
-    }
-
-    public String getStatusIcon(String status) {
-        return switch (status.toLowerCase()) {
-            case "attended" -> "🎉 Attended";
-            case "cancelled" -> "❌ Cancelled";
-            case "booked" -> "⏳ Booked";
-            default -> status;
-        };
-    }
-
     public void bookByPhysiotherapist(Long patientId, String bookingId) {
         Physiotherapist selectedPhysio = selectPhysiotherapistByName();
         Treatment selectedTreatment = selectTreatment(selectedPhysio);
@@ -286,6 +211,10 @@ public class BookingSystem {
                 Booking booking = getBookingById(bookingId);
 
                 booking.setTreatmentId(selectedTreatment.getId());
+                booking.setTreatmentName(selectedTreatment.getName());
+                booking.setBookingDate(selectedTreatment.getAppointmentDate());
+                booking.setBookingTime(selectedTreatment.getAppointmentTime());
+                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
                 booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
                 booking.setStatus("Booked");
 
@@ -317,6 +246,10 @@ public class BookingSystem {
                 Booking booking = getBookingById(bookingId);
 
                 booking.setTreatmentId(selectedTreatment.getId());
+                booking.setTreatmentName(selectedTreatment.getName());
+                booking.setBookingDate(selectedTreatment.getAppointmentDate());
+                booking.setBookingTime(selectedTreatment.getAppointmentTime());
+                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
                 booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
                 booking.setStatus("Booked");
 
@@ -337,7 +270,7 @@ public class BookingSystem {
         }
     }
 
-    public Physiotherapist selectPhysiotherapistByName(){
+    private Physiotherapist selectPhysiotherapistByName(){
         Physiotherapist selectedPhysio;
         while (true) {
             String input = DataHelper.getStringInput(scanner, "Search Physiotherapist by name (e.g., Dr Shahwaiz): ");
@@ -361,7 +294,7 @@ public class BookingSystem {
         return selectedPhysio;
     }
 
-    public String selectExpertise(){
+    private String selectExpertise(){
         Map<String, Set<Physiotherapist>> expertiseToPhysios = getAllExpertiseByPhysiotherapist();
         List<String> expertiseLst = new ArrayList<>(expertiseToPhysios.keySet());
         String selectedExpertise;
@@ -389,7 +322,7 @@ public class BookingSystem {
         return selectedExpertise;
     }
 
-    public Treatment selectTreatment(Physiotherapist physiotherapist){
+    private Treatment selectTreatment(Physiotherapist physiotherapist){
         Treatment selectedTreatment;
         while (true){
             LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter appointment date (YYYY-MM-DD): ");
@@ -410,7 +343,7 @@ public class BookingSystem {
         return selectedTreatment;
     }
 
-    public Treatment selectTreatmentByExpertise(List<Physiotherapist> availablePhysios, String expertise){
+    private Treatment selectTreatmentByExpertise(List<Physiotherapist> availablePhysios, String expertise){
         Treatment selectedTreatment;
         while (true){
             LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter treatment date (YYYY-MM-DD): ");
@@ -437,76 +370,164 @@ public class BookingSystem {
         return selectedTreatment;
     }
 
-    public Map<String, Set<Physiotherapist>> getAllExpertiseByPhysiotherapist(){
+    private Map<String, Set<Physiotherapist>> getAllExpertiseByPhysiotherapist(){
         Map<String, Set<Physiotherapist>> expertiseToPhysios = new HashMap<>();
 
         // Gather all unique treatments and map them to physiotherapists
-        for (Physiotherapist physio : physiotherapists) {
+        for (Physiotherapist physio : this.physiotherapists) {
             for (String expertise : physio.getExpertise()) {
-                expertiseToPhysios.computeIfAbsent(expertise, k -> new HashSet<>()).add(physio);
+                expertiseToPhysios.computeIfAbsent(expertise, _ -> new HashSet<>()).add(physio);
             }
         }
         return expertiseToPhysios;
     }
 
-    public List<Physiotherapist> searchPhysiotherapistByExpertise(String selectedExpertise){
+    private List<Physiotherapist> searchPhysiotherapistByExpertise(String selectedExpertise){
         Map<String, Set<Physiotherapist>> expertiseToPhysios = getAllExpertiseByPhysiotherapist();
         return new ArrayList<>(expertiseToPhysios.get(selectedExpertise));
     }
 
     public void generateBookingReport(LocalDate reportMonth) {
-        if(!bookings.isEmpty()){
-            List<Booking> filteredBookings = bookings.stream()
-                    .filter(booking -> booking.getBookingDate().getMonthValue() == reportMonth.getMonthValue()
-                            && booking.getBookingDate().getYear() == reportMonth.getYear())
-                    .sorted(
-                            Comparator.comparing(Booking::getBookingDate)
-                                    .thenComparing(Booking::getBookingTime)
-                    )
-                    .toList();
+        if(!this.bookings.isEmpty()){
+            List<Booking> filteredBookings = filterBookingsByMonth(reportMonth);
             if (filteredBookings.isEmpty()) {
                 System.out.println("No bookings found for " + reportMonth.getMonth() + " " + reportMonth.getYear());
             }
             else {
-                System.out.println("*** Clinic Report for " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
-                printHeader();
-                for (Booking booking : filteredBookings) {
-                    printBookingDetails(booking);
-                }
-                System.out.println("---------------------------------------------------------------------------------------------------------\n\n\n");
-
-                //Attended booking count for Physios
-                Map<Long, Long> bookingsCountByPhysio = bookings.stream()
-                        .filter(booking -> booking.getBookingDate().getMonthValue() == reportMonth.getMonthValue()
-                                && booking.getBookingDate().getYear() == reportMonth.getYear() && booking.getStatus().equalsIgnoreCase("attended"))
-                        .collect(Collectors.groupingBy(
-                                Booking::getPhysiotherapistId,
-                                Collectors.counting()
-                        ));
-
-                if(!bookingsCountByPhysio.isEmpty()){
-                    System.out.println("*** Bookings Attended By Physiotherapist in " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
-                    System.out.printf("%-20s | %s\n",
-                            "Physiotherapist", "Booking Count");
-                    System.out.println("-------------------------------");
-                    // Sort by count descending before printing
-                    bookingsCountByPhysio.entrySet().stream()
-                            .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-                            .forEach(entry -> {
-                                Physiotherapist physio = getPhysiotherapistById(entry.getKey());
-                                System.out.printf("%-20s | %s\n",
-                                        physio.getFullName(),
-                                        entry.getValue());
-                            });
-                    System.out.println("-------------------------------");
-                }
-                else{
-                    System.out.println("No attended bookings found for " + reportMonth.getMonth() + " " + reportMonth.getYear() + ".");
-                }
+                System.out.println("\n*** Clinic Report for " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
+                printBookingsByPhysiotherapist(filteredBookings);
+                printBookingCountByPhysiotherapist(reportMonth);
             }
         }
         else{
             System.out.println("No bookings found. Hence, report cannot be generated.");
+        }
+    }
+
+    private List<Booking> filterBookingsByMonth(LocalDate reportMonth){
+        return this.bookings.stream()
+                .filter(booking -> booking.getBookingDate().getMonthValue() == reportMonth.getMonthValue()
+                        && booking.getBookingDate().getYear() == reportMonth.getYear())
+                .sorted(
+                        Comparator.comparing(Booking::getPhysiotherapistId)
+                                .thenComparing(Booking::getBookingDate)
+                                .thenComparing(Booking::getBookingTime)
+                )
+                .toList();
+    }
+
+    private Map<Long, Long> getAttendedBookingCountByPhysiotherapist(LocalDate reportMonth){
+        return bookings.stream()
+                .filter(booking -> booking.getBookingDate().getMonthValue() == reportMonth.getMonthValue()
+                        && booking.getBookingDate().getYear() == reportMonth.getYear() && booking.getStatus().equalsIgnoreCase("attended"))
+                .collect(Collectors.groupingBy(
+                        Booking::getPhysiotherapistId,
+                        Collectors.counting()
+                ));
+    }
+
+    private void printBookingsByPhysiotherapist(List<Booking> filteredBookings){
+        Long lastPhysioId = 0L;
+        for (Booking booking : filteredBookings) {
+            Physiotherapist physiotherapist = getPhysiotherapistById(booking.getPhysiotherapistId());
+            Long currentPhysioId = booking.getPhysiotherapistId();
+            if (!currentPhysioId.equals(lastPhysioId)) {
+                System.out.println("\n** Bookings for " + physiotherapist.getFullName() + " **");
+                printHeader();
+                lastPhysioId = currentPhysioId;
+            }
+            printBookingDetails(booking);
+        }
+    }
+
+    private void printBookingCountByPhysiotherapist(LocalDate reportMonth){
+        Map<Long, Long> bookingsCountByPhysio = getAttendedBookingCountByPhysiotherapist(reportMonth);
+        if(!bookingsCountByPhysio.isEmpty()){
+            System.out.println("\n\n\n*** Bookings Attended By Physiotherapist in " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
+            System.out.printf("%-20s | %s\n",
+                    "Physiotherapist", "Booking Count");
+            System.out.println("------------------------------------");
+            bookingsCountByPhysio.entrySet().stream()
+                    .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
+                    .forEach(entry -> {
+                        Physiotherapist physio = getPhysiotherapistById(entry.getKey());
+                        System.out.printf("%-20s | %s\n",
+                                physio.getFullName(),
+                                entry.getValue());
+                    });
+            System.out.println("------------------------------------");
+        }
+        else{
+            System.out.println("No attended bookings found for " + reportMonth.getMonth() + " " + reportMonth.getYear() + ".");
+        }
+    }
+
+    public void printBookingDetails(Booking booking) {
+        Patient patient = getPatientById(booking.getPatientId());
+        Physiotherapist physiotherapist = getPhysiotherapistById(booking.getPhysiotherapistId());
+        String statusIcon = getStatusIcon(booking.getStatus());
+        String bookingDuration = DataHelper.getDurationAsString(booking.getBookingTime(), booking.getBookingDuration());
+        System.out.printf("%-10s | %-15s | %-20s | %-35s | %-15s | %-15s | %s\n",
+                booking.getId(),
+                patient == null ? booking.getPatientId(): patient.getFullName(),
+                physiotherapist.getFullName(),
+                booking.getTreatmentName(),
+                booking.getBookingDate(),
+                bookingDuration,
+                statusIcon);
+    }
+
+    public void printBookingsByPhysiotherapist(Long physiotherapistId) {
+        List<Booking> filteredBookings = getBookingsByPhysiotherapistId(physiotherapistId);
+        if (filteredBookings.isEmpty()) {
+            System.out.println("No bookings found for physiotherapist " + physiotherapistId);
+        }
+        else{
+            System.out.println("*** Bookings ***");
+            printHeader();
+            for (Booking booking : filteredBookings) {
+                printBookingDetails(booking);
+            }
+            System.out.println("---------------------------------------------------------------------------------------------------------");
+        }
+    }
+
+    public void printBookingsByPatient(Long patientId) {
+        List<Booking> filteredBookings = getBookingsByPatientId(patientId);
+        if (filteredBookings.isEmpty()) {
+            System.out.println("No bookings found for patient " + patientId);
+        }
+        else{
+            System.out.println("*** Bookings ***");
+            printHeader();
+            for (Booking booking : filteredBookings) {
+                printBookingDetails(booking);
+            }
+            System.out.println("---------------------------------------------------------------------------------------------------------");
+        }
+    }
+
+    public void printHeader() {
+        System.out.printf("%-10s | %-15s | %-20s | %-35s | %-15s | %-15s | %-10s\n",
+                "Booking Id", "Patient", "Physiotherapist", "Treatment", "Date", "Time", "Status");
+        System.out.println("----------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    public String getStatusIcon(String status) {
+        return switch (status.toLowerCase()) {
+            case "attended" -> "🎉 Attended";
+            case "cancelled" -> "❌ Cancelled";
+            case "booked" -> "⏳ Booked";
+            default -> status;
+        };
+    }
+
+    private void cancelBookingByPatientId(Long patientId){
+        for(Booking booking : bookings){
+            if(booking.getPatientId().equals(patientId)
+                    && booking.getStatus().equalsIgnoreCase("booked")){
+                cancelBooking(booking);
+            }
         }
     }
 }

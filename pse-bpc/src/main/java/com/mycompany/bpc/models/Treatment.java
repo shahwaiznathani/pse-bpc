@@ -8,13 +8,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author shahwaizshaban
  */
 public class Treatment {
-    private String id;
-    private LocalDate appointmentDate;
-    private LocalTime appointmentTime;
-    private Long appointmentDuration;
-    private Long physiotherapistId;
-    private String expertise;
-    private String name;
+    private final String id;
+    private final LocalDate appointmentDate;
+    private final LocalTime appointmentTime;
+    private final Long appointmentDuration;
+    private final Long physiotherapistId;
+    private final String expertise;
+    private final String name;
     private String status;
     private static final AtomicLong appointmentCounter = new AtomicLong(0);
 

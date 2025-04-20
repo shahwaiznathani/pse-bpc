@@ -66,13 +66,15 @@ class BookingSystemTest {
                 "T-2");
         bookingSystem.addBooking(booking1);
         bookingSystem.addBooking(booking2);
-        bookingSystem.cancelBooking(booking1);
-        bookingSystem.cancelBooking(booking2);
+        boolean res1 = bookingSystem.cancelBooking(booking1);
+        boolean res2 = bookingSystem.cancelBooking(booking2);
 
         assertEquals("Cancelled", booking1.getStatus());
         assertNull(booking1.getTreatmentId());
+        assertTrue(res1);
         assertEquals("Attended", booking2.getStatus());
         assertNotNull(booking2.getTreatmentId());
+        assertFalse(res2);
     }
 
     @Test

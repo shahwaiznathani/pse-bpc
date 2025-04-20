@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 public class Booking {
-    private String id;
+    private final String id;
     private LocalDate bookingDate;
     private LocalTime bookingTime;
     private Long bookingDuration;
@@ -93,5 +93,9 @@ public class Booking {
 
     public void setTreatmentName(String treatmentName) {
         this.treatmentName = treatmentName;
+    }
+
+    public void setPatientId(Long patientId){
+        this.patientId = patientId;
     }
 }

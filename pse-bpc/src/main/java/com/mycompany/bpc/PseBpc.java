@@ -15,29 +15,13 @@ public class PseBpc {
 
     public static void main(String[] args) {
         bpc.initializeData();
-        System.out.println("===============================");
-        System.out.println("**Boost Physio Clinic**");
-        System.out.println("===============================");
+        DataHelper.printBanner();
         showDashboard();
     }
 
     private static void showDashboard() {
-        System.out.println("===============================");
-        System.out.println("**Dashboard**");
-        System.out.println("===============================");
-        System.out.println("1. Book an Appointment");
-        System.out.println("2. Search Patient Bookings");
-        System.out.println("3. Change a Booking");
-        System.out.println("4. Search Physiotherapist Bookings");
-        System.out.println("5. Add a Patient");
-        System.out.println("6. Delete a Patient");
-        System.out.println("7. Attend an Appointment");
-        System.out.println("8. View Clinic Report");
-        System.out.println("9. Exit Program");
-        System.out.println("===============================");
-
+        DataHelper.printDashboard();
         int choice = DataHelper.getValidNumberInput(scanner, 1, 89, "Enter your choice (1-" + 9 + "): ");
-
         switch (choice) {
             case 1:
                 bookingMenu(null);
@@ -73,16 +57,8 @@ public class PseBpc {
     }
 
     private static void bookingMenu(String bookingId) {
-        System.out.println("\n===============================");
-        System.out.println("**Appointment Booking**");
-        System.out.println("===============================");
-        System.out.println("1. Search by Physiotherapist");
-        System.out.println("2. Search by Area of Expertise");
-        System.out.println("3. Return to Menu");
-        System.out.println("===============================");
-
+        DataHelper.printBookingMenu();
         int choice = DataHelper.getValidNumberInput(scanner, 1, 3, "Enter your choice (1-" + 3 + "): ");
-
         switch (choice) {
             case 1:
                 bookAppointmentByPhysiotherapist(bookingId);
@@ -99,39 +75,9 @@ public class PseBpc {
         }
     }
 
-    private static void bookAppointmentByPhysiotherapist(String bookingId) {
-        if(bookingId != null){
-            bpc.bookByPhysiotherapist(null, bookingId);
-        }
-        else{
-            Long patientId = DataHelper.getValidId(scanner, 2000000, 9000000, "Enter Patient ID: ");
-            bpc.bookByPhysiotherapist(patientId, null);
-        }
-        showDashboard();
-    }
-
-    private static void bookAppointmentByAreaOfExpertise(String bookingId) {
-        if(bookingId != null){
-            bpc.bookByAreaOfExpertise(null, bookingId);
-        }
-        else{
-            Long patientId = DataHelper.getValidId(scanner, 2000000, 9000000, "Enter Patient ID: ");
-            bpc.bookByAreaOfExpertise(patientId, null);
-        }
-        showDashboard();
-    }
-
     private static void changeBooking() {
-        System.out.println("\n===============================");
-        System.out.println("**Update Booking**");
-        System.out.println("===============================");
-        System.out.println("1. Cancel a Booking");
-        System.out.println("2. Cancel and Book a new Treatment");
-        System.out.println("3. Return to Menu");
-        System.out.println("===============================");
-
+        DataHelper.printChangeBookingMenu();
         int choice = DataHelper.getValidNumberInput(scanner, 1, 3, "Enter your choice (1-" + 3 + "): ");
-
         switch (choice) {
             case 1:
                 cancelPatientBooking();
@@ -140,6 +86,7 @@ public class PseBpc {
             case 2:
                 String bookingId = cancelPatientBooking();
                 if(bookingId!=null){
+                    System.out.println("Proceed with updating the appointment by selecting a new treatment.");
                     bookingMenu(bookingId);
                 }
                 else{
@@ -153,6 +100,38 @@ public class PseBpc {
                 System.out.println("Invalid choice! Please try again.");
                 changeBooking();
         }
+    }
+
+    private static void bookAppointmentByPhysiotherapist(String bookingId) {
+        if(bookingId != null){
+            bpc.bookByPhysiotherapist(null, bookingId);
+        }
+        else{
+            Long patientId = DataHelper.getValidId(scanner, 2000000, 9000000, "Enter Patient ID: ");
+            if(bpc.getPatientById(patientId) != null){
+                bpc.bookByPhysiotherapist(patientId, null);
+            }
+            else{
+                System.out.println("No patient found for the entered ID.");
+            }
+        }
+        showDashboard();
+    }
+
+    private static void bookAppointmentByAreaOfExpertise(String bookingId) {
+        if(bookingId != null){
+            bpc.bookByAreaOfExpertise(null, bookingId);
+        }
+        else{
+            Long patientId = DataHelper.getValidId(scanner, 2000000, 9000000, "Enter Patient ID: ");
+            if(bpc.getPatientById(patientId) != null){
+                bpc.bookByAreaOfExpertise(patientId, null);
+            }
+            else{
+                System.out.println("No patient found for the entered ID.");
+            }
+        }
+        showDashboard();
     }
 
     private static void viewPatientBookings() {
@@ -178,8 +157,15 @@ public class PseBpc {
             bpc.printBookingDetails(booking);
             boolean confirmation = DataHelper.getYesOrNo(scanner, "Are you sure you want to cancel the above booking?");
             if(confirmation){
-                bpc.cancelBooking(booking);
-                return bookingId;
+                boolean isCancelled = bpc.cancelBooking(booking);
+                if(isCancelled){
+                    System.out.println("You have successfully cancelled a booking with id " + booking.getId() + ".");
+                    return bookingId;
+                }
+                else{
+                    System.out.println("Cannot Cancel/Update a booking that has already been marked Cancelled/Attended");
+                    return null;
+                }
             }
         }
         return null;
@@ -213,12 +199,15 @@ public class PseBpc {
 
     private static void removePatient(){
         Long patientId = DataHelper.getValidId(scanner, 2000000, 9000000, "Enter Patient ID for account deletion: ");
-        boolean isRemoved = bpc.removePatient(patientId);
-        if(isRemoved){
-            System.out.println( "Patient with Id " + patientId + " has been deleted.");
-        }
-        else{
-            System.out.println( "No Patient found with Id " + patientId);
+        boolean confirmation = DataHelper.getYesOrNo(scanner, "Are you sure you want to delete the patient?");
+        if(confirmation){
+            boolean isRemoved = bpc.removePatient(patientId);
+            if(isRemoved){
+                System.out.println( "Patient with Id " + patientId + " has been deleted.");
+            }
+            else{
+                System.out.println( "No Patient found with Id " + patientId);
+            }
         }
         showDashboard();
     }

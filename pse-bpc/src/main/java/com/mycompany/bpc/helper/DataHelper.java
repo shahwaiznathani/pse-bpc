@@ -209,4 +209,46 @@ public class DataHelper {
             }
         }
     }
+
+    public static void printBanner(){
+        System.out.println("===============================");
+        System.out.println("***Boost Physio Clinic***");
+        System.out.println("===============================");
+    }
+
+    public static void printDashboard(){
+        System.out.println("===============================");
+        System.out.println("**Dashboard**");
+        System.out.println("===============================");
+        System.out.println("1. Book an Appointment");
+        System.out.println("2. Search Patient Bookings");
+        System.out.println("3. Change a Booking");
+        System.out.println("4. Search Physiotherapist Bookings");
+        System.out.println("5. Add a Patient");
+        System.out.println("6. Delete a Patient");
+        System.out.println("7. Attend an Appointment");
+        System.out.println("8. View Clinic Report");
+        System.out.println("9. Exit Program");
+        System.out.println("===============================");
+    }
+
+    public static void printBookingMenu(){
+        System.out.println("===============================");
+        System.out.println("**Appointment Booking**");
+        System.out.println("===============================");
+        System.out.println("1. Search by Physiotherapist");
+        System.out.println("2. Search by Area of Expertise");
+        System.out.println("3. Return to Menu");
+        System.out.println("===============================");
+    }
+
+    public static void printChangeBookingMenu(){
+        System.out.println("===============================");
+        System.out.println("**Update Booking**");
+        System.out.println("===============================");
+        System.out.println("1. Cancel a Booking");
+        System.out.println("2. Cancel and Book a new Treatment");
+        System.out.println("3. Return to Menu");
+        System.out.println("===============================");
+    }
 }

@@ -7,7 +7,7 @@ import java.util.List;
  * @author shahwaizshaban
  */
 public class Physiotherapist extends Member{
-    private List<String> expertise;
+    private final List<String> expertise;
 
     public Physiotherapist(Long id, String fullName, String address, String phoneNumber, List<String> expertise) {
         super(id, fullName, address, phoneNumber);
@@ -16,9 +16,5 @@ public class Physiotherapist extends Member{
 
     public List<String> getExpertise() {
         return expertise;
-    }
-
-    public void setExpertise(List<String> expertise){
-        this.expertise = expertise;
     }
 }
