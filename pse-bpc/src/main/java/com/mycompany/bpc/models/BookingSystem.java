@@ -23,9 +23,26 @@ public class BookingSystem {
         this.bookings = new ArrayList<>();
     }
 
+    public void initializeData() {
+        List<Patient> patientsData = DataHelper.loadPatients();
+        List<Physiotherapist> physiotherapists = DataHelper.loadPhysiotherapists();
+        List<Treatment> treatments = DataHelper.loadTreatments();
+
+        bulkAddPatients(patientsData);
+        bulkAddPhysiotherapists(physiotherapists);
+        bulkAddTreatments(treatments);
+    }
+
     //Patient Functions
-    public void addPatient(Patient patient) {
-        patients.add(patient);
+    public List<Patient> getPatients(){
+        return patients;
+    }
+
+    public Long addPatient(String name, String address, String phoneNumber) {
+        Long id = GetNewPatientId();
+        Patient newPatient = new Patient(id, name, address, phoneNumber);
+        patients.add(newPatient);
+        return id;
     }
 
     public void bulkAddPatients(List<Patient> patientsList) {
@@ -38,15 +55,21 @@ public class BookingSystem {
                 .findFirst().orElse(null);
     }
 
-    public void removePatient(Long patientId) {
-        patients.removeIf(obj -> Objects.equals(obj.getId(), patientId));
+    public boolean removePatient(Long patientId) {
+        if(getPatientById(patientId)!=null){
+            patients.removeIf(obj -> Objects.equals(obj.getId(), patientId));
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
     public Long GetNewPatientId(){
         return patients.stream()
                 .mapToLong(Patient::getId)
                 .max()
-                .orElse(0) + 1;
+                .orElse(2000000) + 1;
     }
 
 
@@ -158,17 +181,31 @@ public class BookingSystem {
     }
 
     public void cancelBooking(Booking booking) {
-        booking.setStatus("Cancelled");
-        String treatmentId = booking.getTreatmentId();
-        updateTreatmentStatusById(treatmentId);
-        booking.setTreatmentId(null);
+        if(booking.getStatus().equalsIgnoreCase("cancelled") ||
+                booking.getStatus().equalsIgnoreCase("attended") ){
+            System.out.println("Cannot Cancel/Update a booking that has already been marked Cancelled/Attended");
+        }
+        else{
+            booking.setStatus("Cancelled");
+            String treatmentId = booking.getTreatmentId();
+            updateTreatmentStatusById(treatmentId);
+            booking.setTreatmentId(null);
+            System.out.println("You have successfully cancelled a booking with id " + booking.getId() + ".");
+        }
     }
 
     public void attendBooking(Booking booking) {
-        booking.setStatus("Attended");
+        if(booking.getStatus().equalsIgnoreCase("cancelled") ||
+                booking.getStatus().equalsIgnoreCase("attended") ){
+            System.out.println("Cannot attend a booking that has already been marked Cancelled/Attended");
+        }
+        else{
+            booking.setStatus("Attended");
+            System.out.println("You have successfully attended a booking with id " + booking.getId() + ".");
+        }
     }
 
-    public boolean validateBookingTime(LocalDate bookingDate, LocalTime bookingTime, Long patientId) {
+    public boolean validateBookingConflict(LocalDate bookingDate, LocalTime bookingTime, Long patientId) {
         List <Booking> patientBookings = getBookingsByPatientId(patientId);
         if(!patientBookings.isEmpty()){
             for (Booking booking : patientBookings) {
@@ -233,7 +270,6 @@ public class BookingSystem {
 
     public String getStatusIcon(String status) {
         return switch (status.toLowerCase()) {
-            case "confirmed" -> "✅ Confirmed";
             case "attended" -> "🎉 Attended";
             case "cancelled" -> "❌ Cancelled";
             case "booked" -> "⏳ Booked";
@@ -244,16 +280,12 @@ public class BookingSystem {
     public void bookByPhysiotherapist(Long patientId, String bookingId) {
         Physiotherapist selectedPhysio = selectPhysiotherapistByName();
         Treatment selectedTreatment = selectTreatment(selectedPhysio);
-        boolean isBookingValid = validateBookingTime(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
+        boolean isBookingValid = validateBookingConflict(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
         if(isBookingValid){
             if(bookingId != null){
                 Booking booking = getBookingById(bookingId);
 
                 booking.setTreatmentId(selectedTreatment.getId());
-                booking.setTreatmentName(selectedTreatment.getName());
-                booking.setBookingDate(selectedTreatment.getAppointmentDate());
-                booking.setBookingTime(selectedTreatment.getAppointmentTime());
-                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
                 booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
                 booking.setStatus("Booked");
 
@@ -279,16 +311,12 @@ public class BookingSystem {
         String selectedExpertise = selectExpertise();
         List<Physiotherapist> availablePhysios = searchPhysiotherapistByExpertise(selectedExpertise);
         Treatment selectedTreatment = selectTreatmentByExpertise(availablePhysios, selectedExpertise); //Need to pass expertise here
-        boolean isBookingValid = validateBookingTime(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
+        boolean isBookingValid = validateBookingConflict(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
         if(isBookingValid){
             if(bookingId != null){
                 Booking booking = getBookingById(bookingId);
 
                 booking.setTreatmentId(selectedTreatment.getId());
-                booking.setTreatmentName(selectedTreatment.getName());
-                booking.setBookingDate(selectedTreatment.getAppointmentDate());
-                booking.setBookingTime(selectedTreatment.getAppointmentTime());
-                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
                 booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
                 booking.setStatus("Booked");
 
@@ -414,7 +442,7 @@ public class BookingSystem {
 
         // Gather all unique treatments and map them to physiotherapists
         for (Physiotherapist physio : physiotherapists) {
-            for (String expertise : physio.getAllExpertise()) {
+            for (String expertise : physio.getExpertise()) {
                 expertiseToPhysios.computeIfAbsent(expertise, k -> new HashSet<>()).add(physio);
             }
         }

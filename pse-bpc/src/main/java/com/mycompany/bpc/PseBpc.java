@@ -14,21 +14,11 @@ public class PseBpc {
     public static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        initializeData();
+        bpc.initializeData();
         System.out.println("===============================");
         System.out.println("**Boost Physio Clinic**");
         System.out.println("===============================");
         showDashboard();
-    }
-
-    private static void initializeData() {
-        List<Patient> patientsData = DataHelper.loadPatients();
-        List<Physiotherapist> physiotherapists = DataHelper.loadPhysiotherapists();
-        List<Treatment> treatments = DataHelper.loadTreatments();
-
-        bpc.bulkAddPatients(patientsData);
-        bpc.bulkAddPhysiotherapists(physiotherapists);
-        bpc.bulkAddTreatments(treatments);
     }
 
     private static void showDashboard() {
@@ -181,22 +171,15 @@ public class PseBpc {
         String bookingId = DataHelper.getValidBookingId(scanner,"Enter Booking ID for Cancellation: ");
         Booking booking = bpc.getBookingById(bookingId);
         if (booking == null) {
-            System.out.println("\nNo available booking found for entered ID");
+            System.out.println("No available booking found for entered ID");
         }
         else{
             bpc.printHeader();
             bpc.printBookingDetails(booking);
-            if(booking.getStatus().equalsIgnoreCase("cancelled") ||
-                    booking.getStatus().equalsIgnoreCase("attended") ){
-                System.out.println("\nCannot CANCEL/UPDATE a booking that has already been marked Cancelled/Attended");
-            }
-            else{
-                boolean confirmation = DataHelper.getYesOrNo(scanner, "Are you sure you want to cancel the above booking?");
-                if(confirmation){
-                    bpc.cancelBooking(booking);
-                    System.out.println("\nYou have successfully CANCELLED a booking with id " + booking.getId() + ".");
-                    return bookingId;
-                }
+            boolean confirmation = DataHelper.getYesOrNo(scanner, "Are you sure you want to cancel the above booking?");
+            if(confirmation){
+                bpc.cancelBooking(booking);
+                return bookingId;
             }
         }
         return null;
@@ -211,16 +194,9 @@ public class PseBpc {
         else{
             bpc.printHeader();
             bpc.printBookingDetails(booking);
-            if(booking.getStatus().equalsIgnoreCase("cancelled") ||
-                booking.getStatus().equalsIgnoreCase("attended") ){
-                System.out.println("\nCannot ATTEND a booking that has already been marked Cancelled/Attended");
-            }
-            else{
-                boolean confirmation = DataHelper.getYesOrNo(scanner, "Are you sure you want to attend the above booking?");
-                if(confirmation){
-                    bpc.attendBooking(booking);
-                    System.out.println("\nYou have successfully Attended a booking with id " + booking.getId() + ".");
-                }
+            boolean confirmation = DataHelper.getYesOrNo(scanner, "Are you sure you want to attend the above booking?");
+            if(confirmation){
+                bpc.attendBooking(booking);
             }
         }
         showDashboard();
@@ -230,17 +206,20 @@ public class PseBpc {
         String name = DataHelper.getStringInput(scanner, "Enter Patient's Full Name: ");
         String address = DataHelper.getStringInput(scanner, "Enter Patient's Address: ");
         String phoneNumber = DataHelper.getStringInput(scanner, "Enter Patient's Mobile Number: ");
-        Long id = bpc.GetNewPatientId();
-        Patient newPatient = new Patient(id, name, address, phoneNumber);
-        bpc.addPatient(newPatient);
+        Long id = bpc.addPatient(name, address, phoneNumber);
         System.out.println(name + " has been added with Id: "+ id + ".");
         showDashboard();
     }
 
     private static void removePatient(){
         Long patientId = DataHelper.getValidId(scanner, 2000000, 9000000, "Enter Patient ID for account deletion: ");
-        bpc.removePatient(patientId);
-        System.out.println( "Patient with Id " + patientId + " has been deleted.");
+        boolean isRemoved = bpc.removePatient(patientId);
+        if(isRemoved){
+            System.out.println( "Patient with Id " + patientId + " has been deleted.");
+        }
+        else{
+            System.out.println( "No Patient found with Id " + patientId);
+        }
         showDashboard();
     }
 

@@ -14,7 +14,11 @@ public class Physiotherapist extends Member{
         this.expertise = expertise;
     }
 
-    public List<String> getAllExpertise() {
+    public List<String> getExpertise() {
         return expertise;
+    }
+
+    public void setExpertise(List<String> expertise){
+        this.expertise = expertise;
     }
 }
