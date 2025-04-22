@@ -1,0 +1,97 @@
+commit e3f25a283396f5c496e6b8e3c708e9af51eda847
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Tue Apr 22 16:26:54 2025 +0100
+
+    refactoring for adding try catch blocks
+
+commit 445368b7a602ca9a341cf294d10f00c00701f69e
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Tue Apr 22 13:55:32 2025 +0100
+
+    updated README.md
+
+commit 21fe55f4c8ca48f85d126726e376ecb854898fd4
+Author: Shahwaiz S. <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Tue Apr 22 13:44:57 2025 +0100
+
+    added README.md
+
+commit 784711c5acbf026f3f5e7492a0db9ccc42d875b9
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Sun Apr 20 22:13:52 2025 +0100
+
+    code refactoring and improvements
+
+commit 9fcb885f5d385fe3c123d37e4e25c3c9ef8ef405
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Sun Apr 20 14:27:57 2025 +0100
+
+    jar file added
+
+commit be469b4a9328bdfe39ba224b16fb0db5da4df69e
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Sun Apr 20 13:51:25 2025 +0100
+
+    unit tests added for booking system
+
+commit 0a528c8856b890553b34259a8cb8dea8e25031bf
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Sat Apr 19 14:50:48 2025 +0100
+
+    added functionality to generate clinic report
+
+commit aad56554e2b4bce46b4f48a7ab80ec9ce2a055c2
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Thu Apr 17 18:13:56 2025 +0100
+
+    added data files as resources
+
+commit 6a72ea5b558d2b3947732ad50dafaa528a1c651c
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Thu Apr 17 16:01:42 2025 +0100
+
+    added functionality for updating booking
+
+commit d3592e4122dc453503b85191ce38448c8bbfe1d8
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Tue Apr 15 19:04:13 2025 +0100
+
+    added functionality for releasing treatments on booking cancellation
+
+commit 2bf89bc9c048f792ee5d4bad3521b1a54ca67965
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Sun Apr 6 14:17:24 2025 +0100
+
+    linked booking and treatment calender
+
+commit 687385cbd23ee65866e3a5ff7f063783a6332278
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Thu Apr 3 17:26:43 2025 +0100
+
+    patient add and remove functionality added
+
+commit 1b0bdfc7f252f6f97ec4b1ed0cfad411409a5135
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Sun Mar 23 15:05:06 2025 +0000
+
+    Booking functionality optimized and search feature added
+
+commit 7a9154d0c729668b0bb3b3d57d8d974553966d7e
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Thu Feb 27 00:10:31 2025 +0000
+
+     Booking functionality added for patient
+
+commit 887c95b4adccc4bf8a6cc2fc9e5137897adb2884
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Sat Feb 22 11:53:00 2025 +0000
+
+    Add model classes
+    
+    Added model classes for BPC based on the class diagram
+
+commit f4e7e92be1b3de4597960a036ed3d295b7ac8120
+Author: shahwaiznathani <93576330+shahwaiznathani@users.noreply.github.com>
+Date:   Fri Feb 21 23:17:09 2025 +0000
+
+    Initialize
