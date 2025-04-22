@@ -10,8 +10,8 @@ import java.util.*;
  * @author shahwaizshaban
  */
 public class PseBpc {
-    public static BookingSystem bpc = new BookingSystem();
-    public static Scanner scanner = new Scanner(System.in);
+    private static BookingSystem bpc = new BookingSystem();
+    private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
         bpc.initializeData();

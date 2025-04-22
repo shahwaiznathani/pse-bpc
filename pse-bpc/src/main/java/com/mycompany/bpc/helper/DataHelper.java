@@ -113,7 +113,8 @@ public class DataHelper {
                 if (choice < min || choice > max) {
                     System.out.println("Invalid choice. Please enter a valid number.");
                 }
-            } catch (NumberFormatException e) {
+            }
+            catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number.");
             }
         }
@@ -129,29 +130,12 @@ public class DataHelper {
                 if (choice < min || choice > max) {
                     System.out.println("Invalid choice. Please select a valid ID.");
                 }
-            } catch (NumberFormatException e) {
+            }
+            catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number.");
             }
         }
         return choice;
-    }
-
-    public static LocalDate getValidDate(Scanner scanner, String prompt) {
-        LocalDate date = null;
-        while (date == null) {
-            System.out.print(prompt);
-            String input = scanner.nextLine();
-            try {
-                date = LocalDate.parse(input, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                if (date.isBefore(LocalDate.now())) {
-                    System.out.println("The date cannot be in the past. Please enter a future date.");
-                    date = null;
-                }
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
-            }
-        }
-        return date;
     }
 
     public static LocalDate getValidMonthYear(Scanner scanner, String prompt) {
@@ -162,7 +146,8 @@ public class DataHelper {
             try {
                 // Parse only year and month, assume day = 1
                 date = LocalDate.parse(input + "-01", DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            } catch (DateTimeParseException e) {
+            }
+            catch (DateTimeParseException e) {
                 System.out.println("Invalid format. Please use YYYY-MM.");
             }
         }
@@ -176,7 +161,13 @@ public class DataHelper {
     }
 
     public static String getDurationAsString(LocalTime time, long duration) {
-        return time.toString() + " - " + time.plusMinutes(duration).toString();
+        try{
+            return time.toString() + " - " + time.plusMinutes(duration).toString();
+        }
+        catch(Exception e){
+            System.out.println("Error loading treatments: " + e.getMessage());
+            return null;
+        }
     }
 
     public static String getValidBookingId(Scanner scanner, String prompt) {
@@ -184,8 +175,6 @@ public class DataHelper {
         while (true) {
             System.out.print(prompt);
             bookingId = scanner.nextLine().trim();
-
-            // Validate using regex: B- followed by one or more digits
             if (bookingId.matches("B-[1-9]\\d*")) {
                 break;
             } else {
@@ -199,7 +188,6 @@ public class DataHelper {
         while (true) {
             System.out.print(prompt + " (Y/N): ");
             String input = scanner.nextLine().trim().toUpperCase();
-
             if (input.equals("Y")) {
                 return true;
             } else if (input.equals("N")) {

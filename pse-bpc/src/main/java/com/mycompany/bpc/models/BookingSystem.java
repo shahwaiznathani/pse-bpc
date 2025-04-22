@@ -91,24 +91,30 @@ public class BookingSystem {
                 .findFirst().ifPresent(treatment -> treatment.setStatus("confirmed"));
     }
 
-    public List<Treatment> filterTreatmentsByDate(LocalDate date, Long physiotherapistId) {
+    private List<Treatment> filterTreatmentsByPhysiotherapist(Long physiotherapistId) {
         return treatments.stream()
-                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed") &&
-                        appointment.getAppointmentDate().equals(date) &&
-                        appointment.getPhysiotherapistId().equals(physiotherapistId))
+                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed")
+                        && appointment.getPhysiotherapistId().equals(physiotherapistId))
+                .sorted(
+                        Comparator.comparing(Treatment::getAppointmentDate)
+                                .thenComparing(Treatment::getAppointmentTime)
+                )
                 .collect(Collectors.toList());
     }
 
-    public List<Treatment> filterTreatmentsByDateAndPhysiotherapists(LocalDate date, List<Physiotherapist> physiotherapists) {
+    private List<Treatment> filterTreatmentsByExpertise(List<Physiotherapist> physiotherapists, String expertise) {
         Set<Long> physiotherapistIds = physiotherapists.stream()
                 .map(Physiotherapist::getId)
                 .collect(Collectors.toSet());
 
         return treatments.stream()
-                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed") &&
-                        appointment.getAppointmentDate().equals(date) &&
-                        physiotherapistIds.contains(appointment.getPhysiotherapistId()))
-                .sorted(Comparator.comparing(Treatment::getAppointmentTime)) // Sort by time
+                .filter(appointment -> appointment.getStatus().toLowerCase().contains("confirmed")
+                        && physiotherapistIds.contains(appointment.getPhysiotherapistId())
+                        && appointment.getExpertise().equalsIgnoreCase(expertise))
+                .sorted(
+                        Comparator.comparing(Treatment::getAppointmentDate)
+                                .thenComparing(Treatment::getAppointmentTime)
+                )
                 .collect(Collectors.toList());
     }
 
@@ -203,70 +209,86 @@ public class BookingSystem {
     }
 
     public void bookByPhysiotherapist(Long patientId, String bookingId) {
-        Physiotherapist selectedPhysio = selectPhysiotherapistByName();
-        Treatment selectedTreatment = selectTreatment(selectedPhysio);
-        boolean isBookingValid = validateBookingConflict(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
-        if(isBookingValid){
-            if(bookingId != null){
-                Booking booking = getBookingById(bookingId);
+        try{
+            Physiotherapist selectedPhysio = selectPhysiotherapistByName();
+            Treatment selectedTreatment = selectTreatment(selectedPhysio);
+            boolean isBookingValid = validateBookingConflict(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
+            if(isBookingValid){
+                boolean confirmation = DataHelper.getYesOrNo(scanner, "Please confirm if you want to proceed with your selection?");
+                if(confirmation){
+                    if(bookingId != null){
+                        Booking booking = getBookingById(bookingId);
 
-                booking.setTreatmentId(selectedTreatment.getId());
-                booking.setTreatmentName(selectedTreatment.getName());
-                booking.setBookingDate(selectedTreatment.getAppointmentDate());
-                booking.setBookingTime(selectedTreatment.getAppointmentTime());
-                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
-                booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
-                booking.setStatus("Booked");
+                        booking.setTreatmentId(selectedTreatment.getId());
+                        booking.setTreatmentName(selectedTreatment.getName());
+                        booking.setBookingDate(selectedTreatment.getAppointmentDate());
+                        booking.setBookingTime(selectedTreatment.getAppointmentTime());
+                        booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
+                        booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
+                        booking.setStatus("Booked");
 
-                updateTreatmentStatus(selectedTreatment, "Booked");
-                System.out.println("Booking " + bookingId + " Updated.");
+                        updateTreatmentStatus(selectedTreatment, "Booked");
+                        System.out.println("Booking " + bookingId + " Updated.");
+                    }
+                    else{
+                        Booking newBooking = new Booking(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(),
+                                selectedTreatment.getAppointmentDuration(), selectedTreatment.getPhysiotherapistId(), patientId,
+                                "Booked", selectedTreatment.getName(), selectedTreatment.getId());
+
+                        addBooking(newBooking);
+                        updateTreatmentStatus(selectedTreatment, "Booked");
+                        System.out.println("Booking confirmed with Id: " + newBooking.getId());
+                    }
+                }
             }
             else{
-                Booking newBooking = new Booking(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(),
-                        selectedTreatment.getAppointmentDuration(), selectedTreatment.getPhysiotherapistId(), patientId,
-                        "Booked", selectedTreatment.getName(), selectedTreatment.getId());
-
-                addBooking(newBooking);
-                updateTreatmentStatus(selectedTreatment, "Booked");
-                System.out.println("Booking confirmed with Id: " + newBooking.getId());
+                System.out.println("Cannot book more than one booking at the same time");
             }
         }
-        else{
-            System.out.println("Cannot book more than one booking at the same time");
+        catch (Exception e){
+            System.out.println("Error booking treatments by Physiotherapist: " + e.getMessage());
         }
     }
 
     public void bookByAreaOfExpertise(Long patientId, String bookingId){
-        String selectedExpertise = selectExpertise();
-        List<Physiotherapist> availablePhysios = searchPhysiotherapistByExpertise(selectedExpertise);
-        Treatment selectedTreatment = selectTreatmentByExpertise(availablePhysios, selectedExpertise); //Need to pass expertise here
-        boolean isBookingValid = validateBookingConflict(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
-        if(isBookingValid){
-            if(bookingId != null){
-                Booking booking = getBookingById(bookingId);
+        try{
+            String selectedExpertise = selectExpertise();
+            List<Physiotherapist> availablePhysios = searchPhysiotherapistByExpertise(selectedExpertise);
+            Treatment selectedTreatment = selectTreatmentByExpertise(availablePhysios, selectedExpertise); //Need to pass expertise here
+            boolean isBookingValid = validateBookingConflict(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(), patientId);
+            if(isBookingValid){
+                boolean confirmation = DataHelper.getYesOrNo(scanner, "Please confirm if you want to proceed with your selection?");
+                if(confirmation){
+                    if(bookingId != null){
+                        Booking booking = getBookingById(bookingId);
 
-                booking.setTreatmentId(selectedTreatment.getId());
-                booking.setTreatmentName(selectedTreatment.getName());
-                booking.setBookingDate(selectedTreatment.getAppointmentDate());
-                booking.setBookingTime(selectedTreatment.getAppointmentTime());
-                booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
-                booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
-                booking.setStatus("Booked");
+                        booking.setTreatmentId(selectedTreatment.getId());
+                        booking.setTreatmentName(selectedTreatment.getName());
+                        booking.setBookingDate(selectedTreatment.getAppointmentDate());
+                        booking.setBookingTime(selectedTreatment.getAppointmentTime());
+                        booking.setBookingDuration(selectedTreatment.getAppointmentDuration());
+                        booking.setPhysiotherapistId(selectedTreatment.getPhysiotherapistId());
+                        booking.setStatus("Booked");
 
-                updateTreatmentStatus(selectedTreatment, "Booked");
-                System.out.println("Booking " + bookingId + " Updated.");
+                        updateTreatmentStatus(selectedTreatment, "Booked");
+                        System.out.println("Booking " + bookingId + " Updated.");
+                    }
+                    else{
+                        Booking newBooking = new Booking(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(),
+                                selectedTreatment.getAppointmentDuration(), selectedTreatment.getPhysiotherapistId(), patientId,
+                                "Booked", selectedTreatment.getName(), selectedTreatment.getId());
+                        addBooking(newBooking);
+                        updateTreatmentStatus(selectedTreatment, "Booked");
+                        System.out.println("Booking confirmed with Id: " + newBooking.getId());
+                    }
+                }
             }
             else{
-                Booking newBooking = new Booking(selectedTreatment.getAppointmentDate(), selectedTreatment.getAppointmentTime(),
-                        selectedTreatment.getAppointmentDuration(), selectedTreatment.getPhysiotherapistId(), patientId,
-                        "Booked", selectedTreatment.getName(), selectedTreatment.getId());
-                addBooking(newBooking);
-                updateTreatmentStatus(selectedTreatment, "Booked");
-                System.out.println("Booking confirmed with Id: " + newBooking.getId());
+                System.out.println("Cannot book more than one booking at the same time");
             }
         }
-        else{
-            System.out.println("Cannot book more than one booking at the same time");
+        catch(Exception e){
+            System.out.println("Error booking treatments by Expertise: " + e.getMessage());
         }
     }
 
@@ -323,49 +345,29 @@ public class BookingSystem {
     }
 
     private Treatment selectTreatment(Physiotherapist physiotherapist){
-        Treatment selectedTreatment;
-        while (true){
-            LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter appointment date (YYYY-MM-DD): ");
-
-            List<Treatment> availTreatments = filterTreatmentsByDate(appointmentDate, physiotherapist.getId());
-
-            if (availTreatments.isEmpty()) {
-                System.out.println("No appointments available for " + physiotherapist.getFullName() + " on " + appointmentDate.toString() + ". Try another Date.");
-            }
-            else{
-                //Print Available Appointments
-                printCustomTreatments(availTreatments);
-                int slotChoice = DataHelper.getValidNumberInput(scanner, 1, availTreatments.size(), "Enter Slot number to book: ");
-                selectedTreatment = availTreatments.get(slotChoice - 1);
-                break;
-            }
+        Treatment selectedTreatment = null;
+        List<Treatment> availTreatments = filterTreatmentsByPhysiotherapist(physiotherapist.getId());
+        if (availTreatments == null || availTreatments.isEmpty()) {
+            System.out.println("No appointments available for " + physiotherapist.getFullName());
+        }
+        else{
+            printCustomTreatments(availTreatments);
+            int slotChoice = DataHelper.getValidNumberInput(scanner, 1, availTreatments.size(), "Enter Slot number to book: ");
+            selectedTreatment = availTreatments.get(slotChoice - 1);
         }
         return selectedTreatment;
     }
 
     private Treatment selectTreatmentByExpertise(List<Physiotherapist> availablePhysios, String expertise){
-        Treatment selectedTreatment;
-        while (true){
-            LocalDate appointmentDate = DataHelper.getValidDate(scanner, "Enter treatment date (YYYY-MM-DD): ");
-
-            List<Treatment> availTreatments = filterTreatmentsByDateAndPhysiotherapists(appointmentDate, availablePhysios);
-            if (availTreatments.isEmpty()) {
-                System.out.println("No treatments available on " + appointmentDate.toString() + ". Try another Date.");
-            }
-            else {
-                List<Treatment> filteredTreatments = availTreatments.stream()
-                        .filter(appointment -> appointment.getExpertise().equalsIgnoreCase(expertise))
-                        .toList();
-                if(filteredTreatments.isEmpty()){
-                    System.out.println("No treatments available for the selected Expertise on " + appointmentDate.toString() + ". Try another Date.");
-                }
-                else{
-                    printCustomTreatments(filteredTreatments);
-                    int treatmentChoice = DataHelper.getValidNumberInput(scanner, 1, filteredTreatments.size(), "Enter Slot number to book: ");
-                    selectedTreatment = filteredTreatments.get(treatmentChoice - 1);
-                    break;
-                }
-            }
+        Treatment selectedTreatment = null;
+        List<Treatment> availTreatments = filterTreatmentsByExpertise(availablePhysios, expertise);
+        if(availTreatments.isEmpty()){
+            System.out.println("No treatments available for the selected Expertise.");
+        }
+        else{
+            printCustomTreatments(availTreatments);
+            int treatmentChoice = DataHelper.getValidNumberInput(scanner, 1, availTreatments.size(), "Enter Slot number to book: ");
+            selectedTreatment = availTreatments.get(treatmentChoice - 1);
         }
         return selectedTreatment;
     }
@@ -388,19 +390,24 @@ public class BookingSystem {
     }
 
     public void generateBookingReport(LocalDate reportMonth) {
-        if(!this.bookings.isEmpty()){
-            List<Booking> filteredBookings = filterBookingsByMonth(reportMonth);
-            if (filteredBookings.isEmpty()) {
-                System.out.println("No bookings found for " + reportMonth.getMonth() + " " + reportMonth.getYear());
+        try{
+            if(!this.bookings.isEmpty()){
+                List<Booking> filteredBookings = filterBookingsByMonth(reportMonth);
+                if (filteredBookings.isEmpty()) {
+                    System.out.println("No bookings found for " + reportMonth.getMonth() + " " + reportMonth.getYear());
+                }
+                else {
+                    System.out.println("\n*** Clinic Report for " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
+                    printBookingsByPhysiotherapist(filteredBookings);
+                    printBookingCountByPhysiotherapist(reportMonth);
+                }
             }
-            else {
-                System.out.println("\n*** Clinic Report for " + reportMonth.getMonth() + " " + reportMonth.getYear() + " ***");
-                printBookingsByPhysiotherapist(filteredBookings);
-                printBookingCountByPhysiotherapist(reportMonth);
+            else{
+                System.out.println("No bookings found. Hence, report cannot be generated.");
             }
         }
-        else{
-            System.out.println("No bookings found. Hence, report cannot be generated.");
+        catch(Exception e){
+            System.out.println("Error generating booking report: " + e.getMessage());
         }
     }
 
