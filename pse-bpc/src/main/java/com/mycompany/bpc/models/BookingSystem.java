@@ -476,7 +476,7 @@ public class BookingSystem {
         String bookingDuration = DataHelper.getDurationAsString(booking.getBookingTime(), booking.getBookingDuration());
         System.out.printf("%-10s | %-15s | %-20s | %-35s | %-15s | %-15s | %s\n",
                 booking.getId(),
-                patient == null ? booking.getPatientId(): patient.getFullName(),
+                patient == null ? "": patient.getFullName(),
                 physiotherapist.getFullName(),
                 booking.getTreatmentName(),
                 booking.getBookingDate(),

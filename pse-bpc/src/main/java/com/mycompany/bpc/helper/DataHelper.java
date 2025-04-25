@@ -160,6 +160,21 @@ public class DataHelper {
         return inputString.toLowerCase();
     }
 
+    public static String getValidPhoneNumber(Scanner scanner, String prompt) {
+        String phoneNumber;
+        while (true) {
+            System.out.println(prompt);
+            phoneNumber = scanner.nextLine().trim();
+
+            // UK mobile numbers typically start with 07 and are 11 digits long
+            if (phoneNumber.matches("^07\\d{9}$")) {
+                return phoneNumber;
+            } else {
+                System.out.println("Invalid UK phone number. Please enter a valid number starting with 07 and 11 digits long.");
+            }
+        }
+    }
+
     public static String getDurationAsString(LocalTime time, long duration) {
         try{
             return time.toString() + " - " + time.plusMinutes(duration).toString();

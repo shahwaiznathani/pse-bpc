@@ -191,7 +191,7 @@ public class PseBpc {
     private static void addPatient(){
         String name = DataHelper.getStringInput(scanner, "Enter Patient's Full Name: ");
         String address = DataHelper.getStringInput(scanner, "Enter Patient's Address: ");
-        String phoneNumber = DataHelper.getStringInput(scanner, "Enter Patient's Mobile Number: ");
+        String phoneNumber = DataHelper.getValidPhoneNumber(scanner, "Enter Patient's Mobile Number: ");
         Long id = bpc.addPatient(name, address, phoneNumber);
         System.out.println(name + " has been added with Id: "+ id + ".");
         showDashboard();
